@@ -5,6 +5,19 @@ struct Flags {
     werror: bool
 }
 
+impl Flags {
+    fn set_flag(&mut self, flag_id: &str) {
+        match flag_id {
+            "-werror" => self.werror = true,
+
+            _ => {
+                println!("{}: Non existent argument", flag_id);
+                std::process::exit(0);
+            }
+        }
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     
@@ -25,11 +38,8 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
             if &args[0] != arg {
                 // If the argument start with "-", so it is a compiler flag.
                 if arg.chars().nth(0).unwrap() == '-' {
-                    match arg.as_str() {
-                        "-werror" => flags.werror = true,
-                        _ => println!("{}: Non existent argument", arg)
-                    }
-                } else { // Else it is a source file, a file with sol code.
+                    flags.set_flag(arg.as_str())
+                } else { // Else the argument is a source file, a file with sol code.
                     let cpath = env::current_dir().unwrap();
                     let source_path = cpath.into_os_string().into_string().unwrap()+ "/" + arg;
                     
