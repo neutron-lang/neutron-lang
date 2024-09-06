@@ -1,6 +1,8 @@
 use std::env;
 use std::fs;
 
+use colored::Colorize;
+
 struct Flags {
     werror: bool
 }
@@ -11,7 +13,7 @@ impl Flags {
             "-werror" => self.werror = true,
 
             _ => {
-                println!("{}: Non existent argument", flag_id);
+                println!("{}: {} non existent argument", "Error".red(), flag_id);
                 std::process::exit(0);
             }
         }
@@ -59,6 +61,6 @@ fn help_content() {
 fn read_source(file_path: &String) -> String {    
     let contents = fs::read_to_string(file_path)
         .expect("Should have been able to read the file");
-    
+
     return contents;
 }

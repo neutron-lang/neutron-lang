@@ -1,8 +1,6 @@
 [package]
-name = "sol"
+name = "commom"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-colored = "2"
-commom = { path = "../commom" }

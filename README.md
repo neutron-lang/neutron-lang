@@ -53,6 +53,9 @@ It will build all the members of the language project, and they can be encounter
 - [ ] Receive the arguments from the command line and parse then executing each function.
 - [x] Handle the flags from the arguments.
 - [x] Handle the source files from the arguments.
+- [ ] Implement the language’s lexer.
+- [ ] Implement the language’s parser.
+- [ ] Implement the language’s semantics.
 
 ### Linker ("soll")
 

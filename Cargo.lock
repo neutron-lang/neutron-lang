@@ -13,6 +13,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "commom"
+version = "0.1.0"
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -23,6 +27,7 @@ name = "sol"
 version = "0.1.0"
 dependencies = [
  "colored",
+ "commom",
 ]
 
 [[package]]

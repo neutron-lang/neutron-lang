@@ -1,9 +1,13 @@
 use std::env;
 use colored::Colorize;
+use commom;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     parse_args(&args);
+    
+    let result = commom::add(10, 10);
+    println!("{}", result);
 }
 
 fn parse_args(args: &Vec<String>) {
