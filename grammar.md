@@ -11,10 +11,10 @@
 
 ## Special symbols
 
-- `{ + }`
-- `[ + ]`
-- `( + )`
-- `< + >`
+- `{` + `}`
+- `[` + `]`
+- `(` + `)`
+- `<` + `>`
 - `.`
 - `,`
 - `?`
@@ -98,12 +98,12 @@ var variable_name: type = initial_value;
 ### Functions
 
 ```
-function function_name(arguments) {
+func function_name(arguments) {
     -# Your code goes here #-
 }
 ```
 
-- `function` - Tells to the compiler you're defining a function.
+- `func` - Tells to the compiler you're defining a function.
 - `function_name` - The identification of the function.
 - `(arguments)` - Any argument for the function.
 - `{}` - The function code block.

@@ -1,15 +1,16 @@
 # Sol Language
 
-Sol is a language made for study purpose, it is inspired by lua language, and its designed for systems programming.
+Sol is a language made for study purpose, it is inspired by gdscript language, and its designed for systems programming.
 
 ## Sample code
 
-```typescript
+This code is from the [hello_world.sol](tests/hello_world.sol) file.
+
+```gdscript
 import std;
 
-function main() -> void {
-    var text = "Hello, World!";
-    print(text);
+func main() {
+    print("Hello, World!");
 }
 ```
 
@@ -19,38 +20,24 @@ function main() -> void {
 - `nightly` - Unstable release.
 - `stable` - Stable edition of the language.
 
-## Compiling
+## Compiling from source
 
-Use the [make](https://www.gnu.org/software/make/) command to compile the language.
+Use the rust package manager [cargo](https://doc.rust-lang.org/cargo/) to compile the language from source.
 
-In the root folder of the project type `make all` in your console.
+### In debug mode
+This mode of compiling, builds the language without optimizations, so the compile timer is faster than the release mode, it's recommended to use this mode during the development.
 
-It will generate a folder called `build`, inside it has a `bin` folder, inside it has the generated binaries.
+In the root folder of the project, type `cargo build` in your console.
+
+It will build all the members of the language project, and they can be encountered in the `/target/debug/` folder.
+
+### In release folder
+This mode of compiling, builds the language with optimizations, so the compile timer is slower than the debug mode, it's recommended to use this mode on building to release for the nightly or stable builds.
+
+In the root folder of the project, type `cargo build --release` in your console.
+
+It will build all the members of the language project, and they can be encountered in the `/target/release/` folder.
 
 ## License
 
-Content of [LICENSE](LICENSE) file.
-
-```
-MIT License
-
-Copyright (c) 2024 The Infinity Glitch
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+This project is using the MIT license, the license can be encountered in [LICENSE](LICENSE) file.

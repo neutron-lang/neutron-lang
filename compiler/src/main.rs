@@ -17,6 +17,7 @@ fn main() {
 }
 
 fn parse_args(args: &Vec<String>, flags: &mut Flags) {
+    // If doesn't receive arguments, so print on the console the help content of the compiler
     if args.len() < 2 {
         help_content();
     } else {
