@@ -5,7 +5,6 @@ struct Flags {
     werror: bool
 }
 
-
 fn main() {
     let args: Vec<String> = env::args().collect();
     
@@ -22,13 +21,15 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
         help_content();
     } else {
         for arg in args {
+            // If the argument isn't the first argument, so can parse it.
             if &args[0] != arg {
+                // If the argument start with "-", so it is a compiler flag.
                 if arg.chars().nth(0).unwrap() == '-' {
                     match arg.as_str() {
                         "-werror" => flags.werror = true,
                         _ => println!("{}: Non existent argument", arg)
                     }
-                } else {
+                } else { // Else it is a source file, a file with sol code.
                     let cpath = env::current_dir().unwrap();
                     let source_path = cpath.into_os_string().into_string().unwrap()+ "/" + arg;
                     

@@ -1,4 +1,5 @@
 use std::env;
+use colored::Colorize;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -22,4 +23,7 @@ fn parse_args(args: &Vec<String>) {
 // TODO: Make a better help mensage for the users
 fn help_content() {
     println!("Help content comming soon!");
+    println!("{} - Compile and link.\n{} - Run the bin.",
+            "Build".yellow(),
+            "Run".yellow())
 }
