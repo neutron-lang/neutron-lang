@@ -38,6 +38,26 @@ In the root folder of the project, type `cargo build --release` in your console.
 
 It will build all the members of the language project, and they can be encountered in the `/target/release/` folder.
 
+## TODO
+
+### Cli ("sol")
+
+- [ ] Receive the arguments from the command line and parse then executing each function.
+- [ ] Handle the tasks from the arguments: `build`, `run`, `clean`, `sunray` ...
+- [ ] Handle the flags from the arguments.
+- [ ] Handle the source files from the arguments.
+- [ ] Automatize the compiler and linker calls.
+
+### Compiler ("solc")
+
+- [ ] Receive the arguments from the command line and parse then executing each function.
+- [x] Handle the flags from the arguments.
+- [x] Handle the source files from the arguments.
+
+### Linker ("soll")
+
+- Soon
+
 ## License
 
-This project is using the MIT license, the license can be encountered in [LICENSE](LICENSE) file.
+This project is under the MIT license, the license can be encountered in [LICENSE](LICENSE) file.
