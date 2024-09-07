@@ -1,14 +1,17 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use colored::Colorize;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+// TODO: Make a better help mensage for the users
+pub fn show_help_content(from: &str) {
+    println!("Help content comming soon!");
+    
+    match from {
+        "cli" => {
+            println!("{} - Compile and link.\n{} - Run the bin.",
+                "Build".yellow(),
+                "Run".yellow())
+        },
+        "compiler" => println!("Help content comming soon!"),
+        "linker" => println!("Help content comming soon!"),
+        _ => println!("{}: Witch help information?", "Error".red())
     }
 }

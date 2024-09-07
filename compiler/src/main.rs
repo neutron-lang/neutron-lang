@@ -1,7 +1,7 @@
 use std::env;
 use std::fs;
-
 use colored::Colorize;
+use commom;
 
 struct Flags {
     werror: bool
@@ -33,7 +33,7 @@ fn main() {
 fn parse_args(args: &Vec<String>, flags: &mut Flags) {
     // If doesn't receive arguments, so print on the console the help content of the compiler
     if args.len() < 2 {
-        help_content();
+        commom::show_help_content("compiler");
     } else {
         for arg in args {
             // If the argument isn't the first argument, so can parse it.
@@ -51,11 +51,6 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
             }
         }
     }
-}
-
-// TODO: Make a better help mensage for the users
-fn help_content() {
-    println!("Help content comming soon!");
 }
 
 fn read_source(file_path: &String) -> String {    
