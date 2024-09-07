@@ -3,63 +3,35 @@
 //}
 
 pub fn lexer_source(source: &String) {
-    source_to_array(&source);
+    for a in source_to_array(&source) {
+        println!("[{}]", a);
+    }
 }
 
-fn source_to_array(source: &String) {
-    let special_symbols = vec!["(", ")", "{", "}", ";", r#"""#];
+fn source_to_array(source: &String) -> Vec<String> {
+    // All the symbols and operators used for mark the division of the words
+    let special_symbols = vec!["(", ")", "{", "}", ";", ",", ".", r#"""#];
     let operators = vec!["=", "+", "-", "*", "/", "<", ">"];
     
-    let mut current_word = String::new();
-    let mut current_char_idx: usize = 0;
-    let mut current_array = vec![];
+    let mut current_text = String::new(); // current_text: retains the current word formed by the c in the for loop below.
+    let mut result_array = vec![];   // result_array: retains the result of the function, the for loop below insert the current_text here before the current_text clear.
 
+    // The c variable of the loop retains the current char of the source, if it's a special symbol or operator, it's inserted in the result_array, else, it is inserted in the current word.
     for c in source.chars() {
-        if special_symbols.contains(&c.to_string().as_str()) || operators.contains(&c.to_string().as_str()) || c == ' ' {
-            let last = get_last_char(&source, current_char_idx);
-            let next = get_next_char(&source, current_char_idx);
-            
-            if current_word != "" && current_word != last.to_string(){
-                println!("{}", current_word);
-                current_array.insert(current_array.len(), current_word.clone());
+        if c == ' ' || c == '\n' || special_symbols.contains(&c.to_string().as_str()) || operators.contains(&c.to_string().as_str()) {
+            if current_text != ""{
+                result_array.insert(result_array.len(), current_text.clone());
             }
             
-            current_word.clear();
-            current_word.push(c);
-            
-            if c != ' ' {    
-                if next != '_' && operators.contains(&next.to_string().as_str()) {
-                    current_word.push(next);
-                }
+            if c != '\n' {
+                result_array.insert(result_array.len(), c.to_string());
             }
             
-            println!("{}", current_word);
-            current_array.insert(current_array.len(), current_word.clone());
-            current_word.clear();
+            current_text.clear()
         } else {
-            current_word.push(c);
+            current_text.push(c);
         }
-        
-        current_char_idx += 1;
     }
     
-    for a in current_array {
-        print!("[{}]", a);
-    }
-}
-
-fn get_next_char(source: &String, current_char: usize) -> char {
-    if current_char + 1 != source.len() {
-        return source.chars().nth(current_char + 1).unwrap();
-    } else {
-        return '_';
-    }
-}
-
-fn get_last_char(source: &String, current_char: usize) -> char {
-    if current_char - 1 != 0 {
-        return source.chars().nth(current_char - 1).unwrap();
-    } else {
-        return '_';
-    }
+    return result_array;
 }
