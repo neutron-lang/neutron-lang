@@ -1,5 +1,6 @@
 [package]
 name = "solc"
+description = "Sol language compiler."
 version = "0.1.0"
 edition = "2021"
 
