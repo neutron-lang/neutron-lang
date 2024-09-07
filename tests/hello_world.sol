@@ -1,5 +1,5 @@
 import std;
 
-function main() {
+func main() {
     print("Hello, World!");
 }
