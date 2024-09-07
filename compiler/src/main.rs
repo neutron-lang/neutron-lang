@@ -2,8 +2,6 @@ use std::env;
 use colored::Colorize;
 use core;
 
-mod lexer;
-
 struct Flags {
     werror: bool
 }
@@ -50,7 +48,7 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     let source_path = cpath.into_os_string().into_string().unwrap()+ "/" + arg;
                     
                     let source = core::read_source(&source_path);
-                    lexer::lexer_source(&source);
+                    core::lexer::lexer_source(&source);
                 }
             }
         }
