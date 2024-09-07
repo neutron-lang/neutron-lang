@@ -1,7 +1,7 @@
 //enum Token {
 //    SEMICOLON
 //}
-aa
+
 pub fn lexer_source(source: &String) {
     for a in source_to_array(&source) {
         match &a.to_string().as_str() {
