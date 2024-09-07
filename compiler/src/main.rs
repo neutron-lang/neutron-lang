@@ -1,6 +1,6 @@
 use std::env;
 use colored::Colorize;
-use commom;
+use core;
 
 mod lexer;
 
@@ -34,7 +34,7 @@ fn main() {
 fn parse_args(args: &Vec<String>, flags: &mut Flags) {
     // If doesn't receive arguments, so print on the console the help content of the compiler
     if args.len() < 2 {
-        commom::show_help_content("compiler",
+        core::show_help_content("compiler",
             env!("CARGO_PKG_NAME"),
                 env!("CARGO_PKG_VERSION"), 
             env!("CARGO_PKG_DESCRIPTION"));
@@ -49,7 +49,7 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     let cpath = env::current_dir().unwrap();
                     let source_path = cpath.into_os_string().into_string().unwrap()+ "/" + arg;
                     
-                    let source = commom::read_source(&source_path);
+                    let source = core::read_source(&source_path);
                     lexer::lexer_source(&source);
                 }
             }

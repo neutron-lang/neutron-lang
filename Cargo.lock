@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "commom"
+name = "core"
 version = "0.1.0"
 dependencies = [
  "colored",
@@ -30,7 +30,7 @@ name = "sol"
 version = "0.1.0"
 dependencies = [
  "colored",
- "commom",
+ "core",
 ]
 
 [[package]]
@@ -38,7 +38,7 @@ name = "solc"
 version = "0.1.0"
 dependencies = [
  "colored",
- "commom",
+ "core",
 ]
 
 [[package]]

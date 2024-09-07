@@ -1,5 +1,5 @@
 use std::env;
-use commom;
+use core;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -8,7 +8,7 @@ fn main() {
 
 fn parse_args(args: &Vec<String>) {
     if args.len() < 2 {
-        commom::show_help_content("cli",
+        core::show_help_content("cli",
                 env!("CARGO_PKG_NAME"),
                 env!("CARGO_PKG_VERSION"), 
             env!("CARGO_PKG_DESCRIPTION"));
