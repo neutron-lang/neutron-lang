@@ -51,7 +51,6 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     
                     let source = commom::read_source(&source_path);
                     lexer::lexer_source(&source);
-                    println!("{}", source);
                 }
             }
         }
