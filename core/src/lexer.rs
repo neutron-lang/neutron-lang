@@ -85,7 +85,28 @@ fn source_to_array(source: &String) -> Vec<String> {
         }
     }
     
+    correct_array(&result_array);
+    
     return result_array;
+}
+
+fn correct_array(input: &Vec<String>) -> Vec<String> {
+    let mut result = vec![];
+    let operators = vec!["=", "+", "-", "*", "/", "<", ">"];
+    
+    for (index, &value) in input.iter().enumerate() {
+        if operators.contains(&value.as_str()) {
+            if operators.contains() {
+                result.insert(result.len(), value.to_string());
+            } else {
+                result.insert(result.len(), value.to_string());
+            }
+        } else {
+            result.insert(result.len(), value.to_string());
+        }
+    }
+    
+    return result;
 }
 
 fn tokenizer(input: &String) -> Token {
