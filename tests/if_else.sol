@@ -1,6 +1,6 @@
 import std;
 
-fun main() {
+func main() {
     var test = 1;
 
     if test==1 {

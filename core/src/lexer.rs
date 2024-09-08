@@ -1,3 +1,5 @@
+use crate::language_grammar::{get_binary_operators, get_keywords, get_special_symbols, get_unit_operators};
+
 // All tokens of the language
 pub enum Token {
     // Special symbols.
@@ -7,21 +9,25 @@ pub enum Token {
     RightBrace,
     LeftBracket,
     RightBracket,
-    LeftArrow,
-    RightArrow,
     Dot,
     Comma,
     Column,
     SemiColumn,
+    SingleQuote,
+    DoubleQuotes,
+    EscapeSequence(String),
     // StartComment,
     // EndComment,
     Space,
-    
+        
     // Simple operators and mixed operators.
     Operator(String),
     
     // Indentifiers, like: names of functions, variables...
     Indentifier(String),
+    
+    // Keywords, like: func, var, if ...
+    Keyword(String)
 }
 
 pub fn lexer_source(source: &String) -> Vec<Token> {
@@ -41,8 +47,6 @@ pub fn lexer_source(source: &String) -> Vec<Token> {
             Token::RightBrace => println!("RightBrace"),
             Token::LeftBracket => println!("LeftBracket"),
             Token::RightBracket => println!("RightBracket"),
-            Token::LeftArrow => println!("LeftArrow"),
-            Token::RightArrow => println!("RightArrow"),
             Token::Dot => println!("Dot"),
             Token::Comma => println!("Comma"),
             Token::Column => println!("Column"),
@@ -50,6 +54,10 @@ pub fn lexer_source(source: &String) -> Vec<Token> {
             Token::Space => println!("Space"),
             Token::Operator(value) => println!("Operator({value})"),
             Token::Indentifier(value) => println!("Indentifier({value})"),
+            Token::Keyword(value) => println!("Keyword({value})"),
+            Token::SingleQuote => println!("SingleQuote"),
+            Token::DoubleQuotes => println!("DoubleQuotes"),
+            Token::EscapeSequence(value) => println!("EscapeSequence({value})")
         }
     }
     
@@ -59,8 +67,8 @@ pub fn lexer_source(source: &String) -> Vec<Token> {
 // Transform the source into a string vector
 fn source_to_vector(source: &String) -> Vec<String> {
     // All the symbols and operators used for mark the division of the words
-    let special_symbols = vec!["(", ")", "{", "}", ";", ",", ".", r#"""#];
-    let operators = vec!["=", "+", "-", "*", "/", "<", ">"];
+    let special_symbols = get_special_symbols();
+    let operators = get_unit_operators();
     
     let mut current_text = String::new(); // current_text: retains the current word formed by the c in the for loop below.
     let mut result_vector = vec![];   // result_vector: retains the result of the function, the for loop below insert current_text here before current_text clear.
@@ -92,7 +100,7 @@ fn source_to_vector(source: &String) -> Vec<String> {
 // Find binary operators separated in the vector, and transform in a single vector unit.
 fn correct_vector(input: &Vec<String>) -> Vec<String> {
     let mut result = vec![];
-    let operators = vec!["=", "+", "-", "*", "/", "<", ">"];
+    let operators = get_unit_operators();
     let mut skip_value: bool = false;
     
     for (index, value) in input.iter().enumerate() {
@@ -116,6 +124,19 @@ fn correct_vector(input: &Vec<String>) -> Vec<String> {
                     result.insert(result.len(), value.to_string());
                     skip_value = false;
                 }
+            } else if value == r#"\"# {
+                let next_opt = input.get(index + 1);
+                let mut next = String::new();
+                
+                match next_opt {
+                    Some(v) => next.push_str(v),
+                    _ => next.push_str("null")
+                }
+                
+                let escape_sequence = value.to_string() + next.as_str();
+                
+                result.insert(result.len(), escape_sequence);
+                skip_value = true;
             } else {
                 result.insert(result.len(), value.to_string());
             }
@@ -129,25 +150,46 @@ fn correct_vector(input: &Vec<String>) -> Vec<String> {
 
 // Receive a string and transform it in a Token.
 fn tokenizer(input: &String) -> Token {
-    match input.as_str() {
-        "(" => return Token::LeftParenthesis,
-        ")" => return Token::RightParenthesis,
-        "[" => return Token::LeftBrace,
-        "]" => return Token::RightBrace,
-        "{" => return Token::LeftBracket,
-        "}" => return Token::RightBracket,
-        "<" => return Token::LeftArrow,
-        ">" => return Token::RightArrow,
-        "." => return Token::Dot,
-        "," => return Token::Comma,
-        ":" => return Token::Column,
-        ";" => return Token::SemiColumn,
-        " " => return Token::Space,
-        "=" => Token::Operator(input.to_string()),
-        "+" => Token::Operator(input.to_string()),
-        "-" => Token::Operator(input.to_string()),
-        "*" => Token::Operator(input.to_string()),
-        "/" => Token::Operator(input.to_string()),
-         _  => return Token::Indentifier(input.to_string())
+    let unit_operators = get_unit_operators();
+    let binary_operators = get_binary_operators();
+    let special_symbols = get_special_symbols();
+    let keywords = get_keywords();
+    
+    if unit_operators.contains(&input.as_str()) || binary_operators.contains(&input.as_str()) {
+        return Token::Operator(input.to_string());
+    } else if special_symbols.contains(&input.as_str()) {
+        if input == "(" {
+            return Token::LeftParenthesis;
+        } else if input == ")" {
+            return Token::RightParenthesis;
+        } else if input == "[" {
+            return Token::LeftBrace;
+        } else if input == "]" {
+            return Token::RightBrace;
+        } else if input == "{" {
+            return Token::LeftBracket;
+        } else if input == "}" {
+            return Token::RightBracket;
+        } else if input == "." {
+            return Token::Dot;
+        } else if input == "," {
+            return Token::Comma;
+        } else if input == ":" {
+            return Token::Column;
+        } else if input == ";" {
+            return Token::SemiColumn;
+        } else if input == r#""# {
+            return Token::SingleQuote;
+        } else {
+            return Token::DoubleQuotes;
+        }
+    } else if input == " " {
+        return Token::Space;
+    } else if keywords.contains(&input.as_str()) {
+        return Token::Keyword(input.to_string());
+    } else if input.chars().nth(0).unwrap() == '\\' {
+        return Token::EscapeSequence(input.to_string());
+    } else {
+        return Token::Indentifier(input.to_string());
     }
 }

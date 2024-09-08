@@ -1,6 +1,7 @@
 use std::fs;
 use colored::Colorize;
 
+pub mod language_grammar;
 pub mod lexer;
 
 // TODO: Make a better help mensage for the users
