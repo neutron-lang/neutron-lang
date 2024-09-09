@@ -1,6 +1,6 @@
-# Sol Language
+# Neutron Language
 
-Sol is a language made for study purpose, it is inspired by gdscript language, and its designed for systems programming.
+Neutron is a language made for study purpose, it is inspired by gdscript language, and its designed for systems programming.
 
 ## Sample code
 
