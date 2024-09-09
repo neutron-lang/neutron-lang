@@ -1,7 +1,8 @@
 use crate::language_grammar::{get_binary_operators, get_keywords, get_special_symbols, get_unit_operators};
 
 // All tokens of the language
-pub enum Token {
+#[derive(Debug)]
+pub enum TokenType {
     // Special symbols.
     LeftParenthesis,
     RightParenthesis,
@@ -15,19 +16,26 @@ pub enum Token {
     SemiColumn,
     SingleQuote,
     DoubleQuotes,
-    EscapeSequence(String),
+    EscapeSequence,
     // StartComment,
     // EndComment,
     Space,
         
     // Simple operators and mixed operators.
-    Operator(String),
+    Operator,
     
     // Indentifiers, like: names of functions, variables...
-    Indentifier(String),
+    Indentifier,
     
     // Keywords, like: func, var, if ...
-    Keyword(String)
+    Keyword
+}
+
+// A struct that armazenates the token value and his type.
+#[derive(Debug)]
+pub struct Token {
+    value: String,
+    token_type: TokenType
 }
 
 pub fn lexer_source(source: &String) -> Vec<Token> {
@@ -39,27 +47,7 @@ pub fn lexer_source(source: &String) -> Vec<Token> {
         token_vector.insert(token_vector.len(), result);
     }
     
-    for t in &token_vector {
-        match t {
-            Token::LeftParenthesis => println!("LeftParenthesis"),
-            Token::RightParenthesis => println!("RightParenthesis"),
-            Token::LeftBrace => println!("LeftBrace"),
-            Token::RightBrace => println!("RightBrace"),
-            Token::LeftBracket => println!("LeftBracket"),
-            Token::RightBracket => println!("RightBracket"),
-            Token::Dot => println!("Dot"),
-            Token::Comma => println!("Comma"),
-            Token::Column => println!("Column"),
-            Token::SemiColumn => println!("SemiColumn"),
-            Token::Space => println!("Space"),
-            Token::Operator(value) => println!("Operator({value})"),
-            Token::Indentifier(value) => println!("Indentifier({value})"),
-            Token::Keyword(value) => println!("Keyword({value})"),
-            Token::SingleQuote => println!("SingleQuote"),
-            Token::DoubleQuotes => println!("DoubleQuotes"),
-            Token::EscapeSequence(value) => println!("EscapeSequence({value})")
-        }
-    }
+    dbg!(&token_vector);
     
     return token_vector;
 }
@@ -155,41 +143,48 @@ fn tokenizer(input: &String) -> Token {
     let special_symbols = get_special_symbols();
     let keywords = get_keywords();
     
+    let mut current_token = Token {
+        value: input.to_string(),
+        token_type: TokenType::Indentifier
+    };
+    
     if unit_operators.contains(&input.as_str()) || binary_operators.contains(&input.as_str()) {
-        return Token::Operator(input.to_string());
-    } else if special_symbols.contains(&input.as_str()) {
-        if input == "(" {
-            return Token::LeftParenthesis;
-        } else if input == ")" {
-            return Token::RightParenthesis;
-        } else if input == "[" {
-            return Token::LeftBrace;
-        } else if input == "]" {
-            return Token::RightBrace;
-        } else if input == "{" {
-            return Token::LeftBracket;
-        } else if input == "}" {
-            return Token::RightBracket;
-        } else if input == "." {
-            return Token::Dot;
-        } else if input == "," {
-            return Token::Comma;
-        } else if input == ":" {
-            return Token::Column;
-        } else if input == ";" {
-            return Token::SemiColumn;
-        } else if input == r#""# {
-            return Token::SingleQuote;
+            current_token.token_type = TokenType::Operator;
+        } else if special_symbols.contains(&input.as_str()) {
+            if input == "(" {
+                current_token.token_type = TokenType::LeftParenthesis;
+            } else if input == ")" {
+                current_token.token_type = TokenType::RightParenthesis;
+            } else if input == "[" {
+                current_token.token_type = TokenType::LeftBrace;
+            } else if input == "]" {
+                current_token.token_type = TokenType::RightBrace;
+            } else if input == "{" {
+                current_token.token_type = TokenType::LeftBracket;
+            } else if input == "}" {
+                current_token.token_type = TokenType::RightBracket;
+            } else if input == "." {
+                current_token.token_type = TokenType::Dot;
+            } else if input == "," {
+                current_token.token_type = TokenType::Comma;
+            } else if input == ":" {
+                current_token.token_type = TokenType::Column;
+            } else if input == ";" {
+                current_token.token_type = TokenType::SemiColumn;
+            } else if input == r#""# {
+                current_token.token_type = TokenType::SingleQuote;
+            } else {
+                current_token.token_type = TokenType::DoubleQuotes;
+            }
+        } else if input == " " {
+            current_token.token_type = TokenType::Space;
+        } else if keywords.contains(&input.as_str()) {
+            current_token.token_type = TokenType::Keyword;
+        } else if input.chars().nth(0).unwrap() == '\\' {
+            current_token.token_type = TokenType::EscapeSequence;
         } else {
-            return Token::DoubleQuotes;
+            current_token.token_type = TokenType::Indentifier;
         }
-    } else if input == " " {
-        return Token::Space;
-    } else if keywords.contains(&input.as_str()) {
-        return Token::Keyword(input.to_string());
-    } else if input.chars().nth(0).unwrap() == '\\' {
-        return Token::EscapeSequence(input.to_string());
-    } else {
-        return Token::Indentifier(input.to_string());
-    }
+    
+    return current_token;
 }
