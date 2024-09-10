@@ -1,5 +1,11 @@
 use crate::language_grammar::{get_binary_operators, get_keywords, get_special_symbols, get_unit_operators};
 
+#[derive(Debug)]
+pub struct Position {
+    line: usize,
+    colum: usize
+}
+
 // All tokens of the language
 #[derive(Debug)]
 pub enum TokenType {
@@ -58,24 +64,68 @@ fn source_to_vector(source: &String) -> Vec<String> {
     let special_symbols = get_special_symbols();
     let operators = get_unit_operators();
     
+    let mut current_position = Position {
+        line: 1,
+        colum: 1
+    };
+    let mut start = true;
+    let mut start_position = Position {
+        line: 1,
+        colum: 1
+    };
     let mut current_text = String::new(); // current_text: retains the current word formed by the c in the for loop below.
     let mut result_vector = vec![];   // result_vector: retains the result of the function, the for loop below insert current_text here before current_text clear.
+    
+    let mut last_char_is_special = false;
 
     // The c variable of the loop retains the current char of the source, if it's a special symbol or operator, it's inserted in result_vector, else, it is inserted in current_word.
     for c in source.chars() {
+        if start {
+            if current_position.colum != 1 {
+                start_position = Position {
+                    line: current_position.line.clone(),
+                    colum: current_position.colum.clone() - 1
+                };
+            } else {
+                start_position = Position {
+                    line: current_position.line.clone(),
+                    colum: current_position.colum.clone()
+                };
+            }
+
+            start = false;
+            
+            dbg!(&start_position);
+        }
+
+        if last_char_is_special {
+            start = true;
+            last_char_is_special = false;
+        }
+
+        if c != '\n' {
+            current_position.colum += 1;
+        } else {
+            current_position.line += 1;
+            current_position.colum = 1;
+        }
+
         if c == ' ' || c == '\n' || special_symbols.contains(&c.to_string().as_str()) || operators.contains(&c.to_string().as_str()) {
+            start = true;
+            last_char_is_special = true;
+            
             // If current_text is diferent of nothing, so insert it in result_vector.
-            if current_text != ""{
+            if current_text != "" {
                 result_vector.insert(result_vector.len(), current_text.clone());
             }
-            
+
             // If the current char is a \n, ignore it, else insert it in current_array
             if c != '\n' {
                 result_vector.insert(result_vector.len(), c.to_string());
             }
             
             // Clear current_text
-            current_text.clear()
+            current_text.clear();
         } else {
             // Insert the current char in current_text
             current_text.push(c);
