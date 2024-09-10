@@ -1,6 +1,6 @@
 [package]
-name = "sol"
-description = "Sol language cli."
+name = "neutron"
+description = "Neutron language cli."
 version = "0.1.0"
 edition = "2021"
 

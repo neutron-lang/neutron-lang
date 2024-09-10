@@ -5,8 +5,8 @@ pub mod language_grammar;
 pub mod lexer;
 
 // TODO: Make a better help mensage for the users
-pub fn show_help_content(from: &str, show_name: &str, version: &str, description: &str) {
-    println!("{} version: {} - {}\n", show_name, version.green(), description);
+pub fn show_help_content(from: &str, version: &str, description: &str) {
+    println!("{} version: .{}\n", description, version.green());
     
     match from {
         "cli" => {
