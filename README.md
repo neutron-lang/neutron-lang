@@ -4,7 +4,7 @@ Neutron is a language made for study purpose, it is inspired by gdscript languag
 
 ## Sample code
 
-This code is from the [hello_world.sol](tests/hello_world.sol) file.
+This code is from the [hello_world.sol](tests/hello_world.nt) file.
 
 ```gdscript
 import std;
@@ -40,7 +40,7 @@ It will build all the members of the language project, and they can be encounter
 
 ## TODO
 
-### Cli ("sol")
+### Cli ("neutron")
 
 - [ ] Receive the arguments from the command line and parse then executing each function.
 - [ ] Handle the tasks from the arguments: `build`, `run`, `clean`, `sunray` ...
@@ -48,7 +48,7 @@ It will build all the members of the language project, and they can be encounter
 - [ ] Handle the source files from the arguments.
 - [ ] Automatize the compiler and linker calls.
 
-### Compiler ("solc")
+### Compiler ("neutronc")
 
 - [ ] Receive the arguments from the command line and parse then executing each function.
 - [x] Handle the flags from the arguments.
@@ -57,7 +57,7 @@ It will build all the members of the language project, and they can be encounter
 - [ ] Implement the language’s parser.
 - [ ] Implement the language’s semantics.
 
-### Linker ("soll")
+### Linker ("neutron-linker")
 
 - Soon
 
