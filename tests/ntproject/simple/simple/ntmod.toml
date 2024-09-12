@@ -1,0 +1,7 @@
+[module]
+name = "simple"
+author = ""
+version = 1.0
+
+[module_settings]
+output = "bin"
