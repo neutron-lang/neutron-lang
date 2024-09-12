@@ -4,7 +4,7 @@ Neutron is a language made for study purpose, it is inspired by gdscript languag
 
 ## Sample code
 
-This code is from the [hello_world.sol](tests/hello_world.nt) file.
+This code is from the [hello_world.nt](tests/hello_world.nt) file.
 
 ```gdscript
 import std;
