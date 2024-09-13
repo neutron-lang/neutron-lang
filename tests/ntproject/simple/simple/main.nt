@@ -1,0 +1,5 @@
+import std;
+
+func main() -> void {
+	print("Hello world from simple/main.nt");
+}
