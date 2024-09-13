@@ -1,240 +1,55 @@
-use crate::language_grammar::{get_binary_operators, get_keywords, get_special_symbols, get_unit_operators};
-
-#[derive(Debug)]
-pub struct Position {
-    line: usize,
-    colum: usize
-}
+use logos::{Lexer, Logos};
 
 // All tokens of the language
-#[derive(Debug)]
-pub enum TokenType {
-    // Special symbols.
-    LeftParenthesis,
-    RightParenthesis,
-    LeftBrace,
-    RightBrace,
-    LeftBracket,
-    RightBracket,
-    Dot,
-    Comma,
-    Column,
-    SemiColumn,
-    SingleQuote,
-    DoubleQuotes,
-    EscapeSequence,
-    // StartComment,
-    // EndComment,
-    Space,
-        
-    // Simple operators and mixed operators.
-    Operator,
+#[derive(Logos, Debug)]
+#[logos(extras = (usize, usize))]
+pub enum Token {
+    #[regex(r"\n", newline_callback)]
+    NewLine,
     
-    // Indentifiers, like: names of functions, variables...
-    Indentifier,
+    #[token("import", word_callback)]
+    #[token("func", word_callback)]
+    Keyword((usize, usize)),
     
-    // Keywords, like: func, var, if ...
-    Keyword
+    #[regex("[a-zA-Z]+", word_callback)]
+    Identifier((usize, usize)),
 }
 
+/*
 // A struct that armazenates the token value and his type.
 #[derive(Debug)]
 pub struct Token {
     value: String,
     token_type: TokenType
 }
+*/
 
-pub fn lexer_source(source: &String) -> Vec<Token> {
-    let mut token_vector = vec![];
-    
-    for a in source_to_vector(&source) {
-        let result = tokenizer(&a);
-        
-        token_vector.insert(token_vector.len(), result);
-    }
-    
-    dbg!(&token_vector);
-    
-    return token_vector;
+fn newline_callback(lex: &mut Lexer<Token>) {
+    lex.extras.0 += 1;
+    lex.extras.1 = lex.span().end;
 }
 
-// Transform the source into a string vector
-fn source_to_vector(source: &String) -> Vec<String> {
-    // All the symbols and operators used for mark the division of the words
-    let special_symbols = get_special_symbols();
-    let operators = get_unit_operators();
-    
-    let mut current_position = Position {
-        line: 1,
-        colum: 1
-    };
-    let mut start = true;
-    let mut start_position = Position {
-        line: 1,
-        colum: 1
-    };
-    let mut current_text = String::new(); // current_text: retains the current word formed by the c in the for loop below.
-    let mut result_vector = vec![];   // result_vector: retains the result of the function, the for loop below insert current_text here before current_text clear.
-    
-    let mut last_char_is_special = false;
+/// Compute the line and column position for the current word.
+fn word_callback(lex: &mut Lexer<Token>) -> (usize, usize) {
+    let line = lex.extras.0;
+    let column = lex.span().start - lex.extras.1;
 
-    // The c variable of the loop retains the current char of the source, if it's a special symbol or operator, it's inserted in result_vector, else, it is inserted in current_word.
-    for c in source.chars() {
-        if start {
-            if current_position.colum != 1 {
-                start_position = Position {
-                    line: current_position.line.clone(),
-                    colum: current_position.colum.clone() - 1
-                };
-            } else {
-                start_position = Position {
-                    line: current_position.line.clone(),
-                    colum: current_position.colum.clone()
-                };
-            }
-
-            start = false;
-            
-            dbg!(&start_position);
-        }
-
-        if last_char_is_special {
-            start = true;
-            last_char_is_special = false;
-        }
-
-        if c != '\n' {
-            current_position.colum += 1;
-        } else {
-            current_position.line += 1;
-            current_position.colum = 1;
-        }
-
-        if c == ' ' || c == '\n' || special_symbols.contains(&c.to_string().as_str()) || operators.contains(&c.to_string().as_str()) {
-            start = true;
-            last_char_is_special = true;
-            
-            // If current_text is diferent of nothing, so insert it in result_vector.
-            if current_text != "" {
-                result_vector.insert(result_vector.len(), current_text.clone());
-            }
-
-            // If the current char is a \n, ignore it, else insert it in current_array
-            if c != '\n' {
-                result_vector.insert(result_vector.len(), c.to_string());
-            }
-            
-            // Clear current_text
-            current_text.clear();
-        } else {
-            // Insert the current char in current_text
-            current_text.push(c);
-        }
-    }
-    
-    return correct_vector(&result_vector);
+    (line, column)
 }
 
-// Find binary operators separated in the vector, and transform in a single vector unit.
-fn correct_vector(input: &Vec<String>) -> Vec<String> {
-    let mut result = vec![];
-    let operators = get_unit_operators();
-    let mut skip_value: bool = false;
-    
-    for (index, value) in input.iter().enumerate() {
-        if skip_value != true {
-            if operators.contains(&value.as_str()) {
-                let next_opt = input.get(index + 1);
-                let mut next = String::new();
-                
-                match next_opt {
-                    Some(v) => next.push_str(v),
-                    _ => next.push_str("null")
+pub fn lex_source(source: &String) {
+    let mut lex = Token::lexer(source);
+
+    while let Some(token) = lex.next() {
+        match token {
+            Ok(tp) => {
+                match tp {
+                    Token::NewLine => println!("Newline found"),
+                    Token::Keyword((line, column)) => println!("Keyword '{}' found at ({}, {})", lex.slice(), line, column),
+                    Token::Identifier((line, column)) => println!("Indetifier '{}' found at ({}, {})", lex.slice(), line, column)
                 }
-                
-                if operators.contains(&next.as_str()) {
-                    let binary_operator = value.to_string() + next.as_str();
-                    
-                    result.insert(result.len(), binary_operator);
-                    
-                    skip_value = true;
-                } else {
-                    result.insert(result.len(), value.to_string());
-                    skip_value = false;
-                }
-            } else if value == r#"\"# {
-                let next_opt = input.get(index + 1);
-                let mut next = String::new();
-                
-                match next_opt {
-                    Some(v) => next.push_str(v),
-                    _ => next.push_str("null")
-                }
-                
-                let escape_sequence = value.to_string() + next.as_str();
-                
-                result.insert(result.len(), escape_sequence);
-                skip_value = true;
-            } else {
-                result.insert(result.len(), value.to_string());
-            }
-        } else {
-            skip_value = false;
+            },
+            Err(e) => println!("Error: {:?}", e)
         }
     }
-        
-    return result;
-}
-
-// Receive a string and transform it in a Token.
-fn tokenizer(input: &String) -> Token {
-    let unit_operators = get_unit_operators();
-    let binary_operators = get_binary_operators();
-    let special_symbols = get_special_symbols();
-    let keywords = get_keywords();
-    
-    let mut current_token = Token {
-        value: input.to_string(),
-        token_type: TokenType::Indentifier
-    };
-    
-    if unit_operators.contains(&input.as_str()) || binary_operators.contains(&input.as_str()) {
-            current_token.token_type = TokenType::Operator;
-        } else if special_symbols.contains(&input.as_str()) {
-            if input == "(" {
-                current_token.token_type = TokenType::LeftParenthesis;
-            } else if input == ")" {
-                current_token.token_type = TokenType::RightParenthesis;
-            } else if input == "[" {
-                current_token.token_type = TokenType::LeftBrace;
-            } else if input == "]" {
-                current_token.token_type = TokenType::RightBrace;
-            } else if input == "{" {
-                current_token.token_type = TokenType::LeftBracket;
-            } else if input == "}" {
-                current_token.token_type = TokenType::RightBracket;
-            } else if input == "." {
-                current_token.token_type = TokenType::Dot;
-            } else if input == "," {
-                current_token.token_type = TokenType::Comma;
-            } else if input == ":" {
-                current_token.token_type = TokenType::Column;
-            } else if input == ";" {
-                current_token.token_type = TokenType::SemiColumn;
-            } else if input == r#""# {
-                current_token.token_type = TokenType::SingleQuote;
-            } else {
-                current_token.token_type = TokenType::DoubleQuotes;
-            }
-        } else if input == " " {
-            current_token.token_type = TokenType::Space;
-        } else if keywords.contains(&input.as_str()) {
-            current_token.token_type = TokenType::Keyword;
-        } else if input.chars().nth(0).unwrap() == '\\' {
-            current_token.token_type = TokenType::EscapeSequence;
-        } else {
-            current_token.token_type = TokenType::Indentifier;
-        }
-    
-    return current_token;
 }
