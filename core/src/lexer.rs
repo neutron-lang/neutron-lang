@@ -2,53 +2,81 @@ use logos::{Lexer, Logos};
 
 // All tokens of the language
 #[derive(Logos, Debug)]
-#[logos(extras = (usize, usize))]
+#[logos(extras = (usize, usize, String))]
 pub enum TokenType {
-    #[token("(")]
-    LeftParenthesis,
-    #[token(")")]
-    RigthParenthesis,
+    #[token("(", token_callback)]
+    LeftParenthesis((usize, usize, String)),
+    #[token(")", token_callback)]
+    RigthParenthesis((usize, usize, String)),
     
-    #[token("[")]
-    LeftBrace,
-    #[token("]")]
-    RigthBrace,
+    #[token("[", token_callback)]
+    LeftBrace((usize, usize, String)),
+    #[token("]", token_callback)]
+    RigthBrace((usize, usize, String)),
     
-    #[token("{")]
-    LeftBracket,
-    #[token("}")]
-    RigthBracket,
+    #[token("{", token_callback)]
+    LeftBracket((usize, usize, String)),
+    #[token("}", token_callback)]
+    RigthBracket((usize, usize, String)),
     
-    #[token(".")]
-    Period,
+    #[token(".", token_callback)]
+    Period((usize, usize, String)),
     
-    #[token(",")]
-    Comma,
+    #[token(",", token_callback)]
+    Comma((usize, usize, String)),
     
-    #[token(":")]
-    Column,
+    #[token(":", token_callback)]
+    Column((usize, usize, String)),
     
-    #[token(";")]
-    SemiColumn,
+    #[token(";", token_callback)]
+    SemiColumn((usize, usize, String)),
     
-    #[token(r#"'"#)]
-    SingleQuote,
-    #[token(r#"""#)]
-    DoubleQuotes,
+    #[token(r#"'"#, token_callback)]
+    SingleQuote((usize, usize, String)),
+    #[token(r#"""#, token_callback)]
+    DoubleQuotes((usize, usize, String)),
     
     #[regex(r"\n", newline_callback)]
     NewLine,
     
-    #[token(" ")]
-    Space,
+    #[token(" ", token_callback)]
+    Space((usize, usize, String)),
     
-    #[token("import", word_callback)]
-    #[token("func", word_callback)]
-    #[token("var", word_callback)]
-    Keyword((usize, usize)),
+    #[token("import", token_callback)]
+    #[token("func", token_callback)]
+    #[token("var", token_callback)]
+    #[token("if", token_callback)]
+    Keyword((usize, usize, String)),
     
-    #[regex("[a-zA-Z]+", word_callback)]
-    Identifier((usize, usize)),
+    #[regex("[a-zA-Z]+", token_callback)]
+    Identifier((usize, usize, String)),
+    
+    #[token("=", token_callback)]
+    #[token("+", token_callback)]
+    #[token("-", token_callback)]
+    #[token("*", token_callback)]
+    #[token("/", token_callback)]
+    #[token("%", token_callback)]
+    #[token("+=", token_callback)]
+    #[token("-=", token_callback)]
+    #[token("*=", token_callback)]
+    #[token("/=", token_callback)]
+    #[token("%=", token_callback)]
+    #[token("==", token_callback)]
+    #[token("!=", token_callback)]
+    #[token(">=", token_callback)]
+    #[token("<=", token_callback)]
+    Operator((usize, usize, String)),
+    
+    #[regex("[0-9]+", token_callback)]
+    Number((usize, usize, String))
+}
+
+fn token_callback(lex: &mut Lexer<TokenType>) -> (usize, usize, String) {
+    let value = lex.slice();
+    let position = position_callback(lex);
+    
+    (position.0, position.1, value.to_string())
 }
 
 fn newline_callback(lex: &mut Lexer<TokenType>) {
@@ -56,8 +84,8 @@ fn newline_callback(lex: &mut Lexer<TokenType>) {
     lex.extras.1 = lex.span().end;
 }
 
-/// Compute the line and column position for the current word.
-fn word_callback(lex: &mut Lexer<TokenType>) -> (usize, usize) {
+// Compute the line and column position for the current word.
+fn position_callback(lex: &mut Lexer<TokenType>) -> (usize, usize) {
     let line = lex.extras.0;
     let column = lex.span().start - lex.extras.1;
 
