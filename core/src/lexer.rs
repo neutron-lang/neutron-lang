@@ -1,5 +1,6 @@
 use logos::{Lexer, Logos};
 use crate::{notify::Message, post_lexer::verify_lexer};
+use std::process;
 
 // All tokens of the language
 #[derive(Logos, Debug, Clone)]
@@ -151,22 +152,33 @@ pub fn lex_source(source: &String, file_name: &String) -> Vec<Token> {
         line: 0,
         column: 0
     };
+    let mut error_count = 0;
+    let mut can_proceed = true;
 
     while let Some(result) = lex.next() {
         match result {
             Ok(token) => lexer_result.insert(lexer_result.len(), token),
             Err(_) => {
-                message.text = String::from(format!("{:?}: Non existent token.", lex.slice()));
+                message.text = String::from(format!("{:?} -> non existent token.", lex.slice()));
                 message.line = lex.extras.0;
                 message.column = lex.span().start - lex.extras.1;
                 
                 message.show_error();
+                
+                error_count += 1;
+                can_proceed = false;
             }
         }
     }
     
-    lexer_result = Token::lex_trim(&lexer_result);
-    verify_lexer(&lexer_result, &file_name);
+    if can_proceed {
+        lexer_result = Token::lex_trim(&lexer_result);
+        verify_lexer(&lexer_result, &file_name);
+    } else {
+        println!("[compiler]: Can't proceed due for {} errors.", error_count);
+        process::exit(1);
+    }
+    
     // dbg!(&lexer_result);
     return lexer_result;
 }
