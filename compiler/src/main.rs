@@ -45,7 +45,7 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     let source_path = cpath.into_os_string().into_string().unwrap()+ "/" + arg;
                     
                     let source = core::read_source(&source_path);
-                    core::lexer::lex_source(&source);
+                    core::lexer::lex_source(&source, arg);
                 }
             }
         }

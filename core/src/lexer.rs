@@ -1,4 +1,5 @@
 use logos::{Lexer, Logos};
+use crate::{notify::Message, post_lexer::verify_lexer};
 
 // All tokens of the language
 #[derive(Logos, Debug, Clone)]
@@ -18,6 +19,12 @@ pub enum Token {
     LeftBracket((usize, usize, String)),
     #[token("}", token_callback)]
     RigthBracket((usize, usize, String)),
+    
+    #[token("-#", token_callback)]
+    OpenComment((usize, usize, String)),
+    
+    #[token("#-", token_callback)]
+    CloseComment((usize, usize, String)),
     
     #[token(".", token_callback)]
     Period((usize, usize, String)),
@@ -46,9 +53,17 @@ pub enum Token {
     #[token("func", token_callback)]
     #[token("var", token_callback)]
     #[token("if", token_callback)]
+    #[token("else", token_callback)]
+    #[token("class", token_callback)]
+    #[token("struct", token_callback)]
+    #[token("int", token_callback)]
+    #[token("float", token_callback)]
+    #[token("bool", token_callback)]
+    #[token("str", token_callback)]
+    #[token("void", token_callback)]
     Keyword((usize, usize, String)),
     
-    #[regex("[a-zA-Z]+", token_callback)]
+    #[regex("[a-zA-Z0-9_]+", token_callback)]
     Identifier((usize, usize, String)),
     
     #[token("=", token_callback)]
@@ -57,6 +72,9 @@ pub enum Token {
     #[token("*", token_callback)]
     #[token("/", token_callback)]
     #[token("%", token_callback)]
+    #[token("<", token_callback)]
+    #[token(">", token_callback)]
+    #[token("!", token_callback)]
     #[token("+=", token_callback)]
     #[token("-=", token_callback)]
     #[token("*=", token_callback)]
@@ -66,9 +84,10 @@ pub enum Token {
     #[token("!=", token_callback)]
     #[token(">=", token_callback)]
     #[token("<=", token_callback)]
+    #[token("->", token_callback)]
     Operator((usize, usize, String)),
     
-    #[regex("[0-9]+", token_callback)]
+    #[regex("[0-9]+", priority = 3, callback = token_callback)]
     Number((usize, usize, String))
 }
 
@@ -123,18 +142,31 @@ impl Token {
     }
 }
 
-pub fn lex_source(source: &String) -> Vec<Token> {
+pub fn lex_source(source: &String, file_name: &String) -> Vec<Token> {
     let mut lex = Token::lexer(source);
     let mut lexer_result = vec![];
+    let mut message = Message {
+        file: file_name.to_string(),
+        text: String::new(),
+        line: 0,
+        column: 0
+    };
 
     while let Some(result) = lex.next() {
         match result {
             Ok(token) => lexer_result.insert(lexer_result.len(), token),
-            Err(_) => println!("Error, non-existent token.")
+            Err(_) => {
+                message.text = String::from(format!("{:?}: Non existent token.", lex.slice()));
+                message.line = lex.extras.0;
+                message.column = lex.span().start - lex.extras.1;
+                
+                message.show_error();
+            }
         }
     }
     
     lexer_result = Token::lex_trim(&lexer_result);
-    dbg!(&lexer_result);
+    verify_lexer(&lexer_result, &file_name);
+    // dbg!(&lexer_result);
     return lexer_result;
 }

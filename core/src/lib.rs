@@ -1,8 +1,9 @@
 use std::fs;
 use colored::Colorize;
 
-pub mod language_grammar;
+pub mod notify;
 pub mod lexer;
+pub mod post_lexer;
 
 // TODO: Make a better help mensage for the users
 pub fn show_help_content(from: &str, version: &str, description: &str) {

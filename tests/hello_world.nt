@@ -1,5 +1,6 @@
 import std;
 
-func main() {
+func main() -> void {
+    var num1 = 10;
     print("Hello, World!");
 }
