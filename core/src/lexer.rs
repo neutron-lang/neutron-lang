@@ -1,9 +1,9 @@
 use logos::{Lexer, Logos};
 
 // All tokens of the language
-#[derive(Logos, Debug)]
+#[derive(Logos, Debug, Clone)]
 #[logos(extras = (usize, usize, String))]
-pub enum TokenType {
+pub enum Token {
     #[token("(", token_callback)]
     LeftParenthesis((usize, usize, String)),
     #[token(")", token_callback)]
@@ -72,30 +72,69 @@ pub enum TokenType {
     Number((usize, usize, String))
 }
 
-fn token_callback(lex: &mut Lexer<TokenType>) -> (usize, usize, String) {
+fn token_callback(lex: &mut Lexer<Token>) -> (usize, usize, String) {
     let value = lex.slice();
     let position = position_callback(lex);
     
     (position.0, position.1, value.to_string())
 }
 
-fn newline_callback(lex: &mut Lexer<TokenType>) {
+fn newline_callback(lex: &mut Lexer<Token>) {
     lex.extras.0 += 1;
     lex.extras.1 = lex.span().end;
 }
 
 // Compute the line and column position for the current word.
-fn position_callback(lex: &mut Lexer<TokenType>) -> (usize, usize) {
+fn position_callback(lex: &mut Lexer<Token>) -> (usize, usize) {
     let line = lex.extras.0;
     let column = lex.span().start - lex.extras.1;
 
     (line, column)
 }
 
-pub fn lex_source(source: &String){
-    let mut lex = TokenType::lexer(source);
-
-    while let Some(token) = lex.next() {
-        dbg!(&token);
+impl Token {
+    pub fn lex_trim(result: &Vec<Token>) -> Vec<Token> {
+        let mut in_string: bool = false;
+        let mut trim_result = vec![];
+        
+        for token in result {
+            if in_string {
+                match token {
+                    Token::DoubleQuotes(_) => {
+                        in_string = false;
+                        trim_result.insert(trim_result.len(), token.clone());
+                    },
+                    _ => trim_result.insert(trim_result.len(), token.clone())
+                }
+            } else {
+                match token {
+                    Token::DoubleQuotes(_) => {
+                        in_string = true;
+                        trim_result.insert(trim_result.len(), token.clone());
+                    },
+                    Token::NewLine => continue,
+                    Token::Space(_) => continue,
+                    _ => trim_result.insert(trim_result.len(), token.clone())
+                }
+            }
+        }
+        
+        return trim_result;
     }
+}
+
+pub fn lex_source(source: &String) -> Vec<Token> {
+    let mut lex = Token::lexer(source);
+    let mut lexer_result = vec![];
+
+    while let Some(result) = lex.next() {
+        match result {
+            Ok(token) => lexer_result.insert(lexer_result.len(), token),
+            Err(_) => println!("Error, non-existent token.")
+        }
+    }
+    
+    lexer_result = Token::lex_trim(&lexer_result);
+    dbg!(&lexer_result);
+    return lexer_result;
 }

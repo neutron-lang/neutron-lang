@@ -1,0 +1,52 @@
+-# A simple program for testing the language #-
+import std;
+
+func main() -> void {
+    -# Variable declaration, and receive terminal input #-
+    var num1 = input("Enter a number: ");
+    var num2 = input("Enter another number: ");
+
+    my_math.sum(num1, num2);
+
+    var struct_test = test {
+        value: "Testing the language syntax."
+    };
+
+    -# Acessing a function of a struct #-
+    struct_test::print_value();
+
+    -# Acessing something of a namespace #-
+    test_space::test();
+
+    -# Variable declarations #-
+    var test;
+    var test_initialized = true;
+    var test_with_type: bool;
+    var test2 := true;
+}
+
+-# Classes declaration #-
+class my_math {
+    func sum(num1: int, num2: int) -> void {
+        return num1 + num2;
+    }
+}
+
+-# Structures declaration #-
+struct test {
+    value: str
+}
+
+-# Structures functions implementation #-
+impl test {
+    func print_value(&self) -> void {
+        print(self.value);
+    }
+}
+
+-# Namespaces declaration #-
+namespace test_space {
+    func test() -> void {
+        print("Namespaces!");
+    }
+}
