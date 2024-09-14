@@ -143,11 +143,10 @@ impl Token {
     }
 }
 
-pub fn lex_source(source: &String, file_name: &String) -> Vec<Token> {
+pub fn lex_source(source: &String) -> Vec<Token> {
     let mut lex = Token::lexer(source);
     let mut lexer_result = vec![];
     let mut message = Message {
-        file: file_name.to_string(),
         text: String::new(),
         line: 0,
         column: 0
@@ -173,9 +172,10 @@ pub fn lex_source(source: &String, file_name: &String) -> Vec<Token> {
     
     if can_proceed {
         lexer_result = Token::lex_trim(&lexer_result);
-        verify_lexer(&lexer_result, &file_name);
+        verify_lexer(&lexer_result);
     } else {
-        println!("[compiler]: Can't proceed due for {} errors.", error_count);
+        message.text = String::from(format!("Can't proceed due by {} errors.", error_count));
+        message.show_message("compiler".to_string());
         process::exit(1);
     }
     

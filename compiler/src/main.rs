@@ -1,6 +1,5 @@
 use std::env;
-use colored::Colorize;
-use core;
+use core::{self, notify};
 
 struct Flags {
     werror: bool
@@ -12,8 +11,8 @@ impl Flags {
             "-werror" => self.werror = true,
 
             _ => {
-                println!("{}: {} non existent argument", "Error".red(), flag_id);
-                std::process::exit(0);
+                notify::Message{text: format!("{} -> non existent flag.", flag_id), line: 0, column: 0}.show_message("neutron".to_string());
+                std::process::exit(1);
             }
         }
     }
@@ -45,7 +44,10 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     let source_path = cpath.into_os_string().into_string().unwrap()+ "/" + arg;
                     
                     let source = core::read_source(&source_path);
-                    core::lexer::lex_source(&source, arg);
+                    
+                    notify::Message{text: format!("compiling -> {}", arg), line: 0, column: 0}.show_message("compiler".to_string());
+                    
+                    core::lexer::lex_source(&source);
                 }
             }
         }

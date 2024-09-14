@@ -1,15 +1,14 @@
 use crate::lexer::Token;
 use crate::notify::Message;
 
-pub fn verify_lexer(result: &Vec<Token>, file_name: &String) {
+pub fn verify_lexer(result: &Vec<Token>) {
     let mut message = Message {
-        file: file_name.to_string(),
         text: String::new(),
         line: 0,
         column: 0
     };
     
-    let mut expect: Token;
+    let mut expect: Vec<Token>;
     
     for token in result {
         match token {
