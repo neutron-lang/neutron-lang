@@ -1,7 +1,7 @@
 use colored::Colorize;
 use std::fs;
 
-pub mod lexer;
+pub mod frontend;
 pub mod notify;
 
 // TODO: Make a better help mensage for the users

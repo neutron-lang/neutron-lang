@@ -60,7 +60,7 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     }
                     .show_message("compiler".to_string());
 
-                    core::lexer::lex_source(&source);
+                    core::frontend::lexer::lex_source(&source);
                 }
             }
         }
