@@ -9,7 +9,7 @@ fn parse_args(args: &Vec<String>) {
     if args.len() < 2 {
         help_content();
     } else {
-        for arg in args {    
+        for arg in args {
             if arg.chars().nth(0).unwrap() == '-' {
                 println!("{}: argument.", arg);
             } else {

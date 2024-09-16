@@ -1,5 +1,5 @@
-use std::env;
 use core;
+use std::env;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -8,9 +8,13 @@ fn main() {
 
 fn parse_args(args: &Vec<String>) {
     if args.len() < 2 {
-        core::show_help_content("cli", env!("CARGO_PKG_DESCRIPTION"), env!("CARGO_PKG_VERSION"));
+        core::show_help_content(
+            "cli",
+            env!("CARGO_PKG_DESCRIPTION"),
+            env!("CARGO_PKG_VERSION"),
+        );
     } else {
-        for arg in args {    
+        for arg in args {
             if arg.chars().nth(0).unwrap() == '-' {
                 println!("{}: argument.", arg);
             } else {
