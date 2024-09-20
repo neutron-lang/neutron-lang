@@ -5,8 +5,8 @@ pub mod frontend;
 pub mod notify;
 
 // TODO: Make a better help mensage for the users
-pub fn show_help_content(from: &str, version: &str, description: &str) {
-    println!("{} version: .{}\n", description, version.green());
+pub fn show_help_content(from: &str, description: &str) {
+    println!("{}\n", description);
 
     match from {
         "cli" => {

@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 colored = "2"
 logos = "0.14.1"
+pest = "2.7.13"

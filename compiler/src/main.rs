@@ -34,11 +34,7 @@ fn main() {
 fn parse_args(args: &Vec<String>, flags: &mut Flags) {
     // If doesn't receive arguments, so print on the console the help content of the compiler
     if args.len() < 2 {
-        core::show_help_content(
-            "compiler",
-            env!("CARGO_PKG_DESCRIPTION"),
-            env!("CARGO_PKG_VERSION"),
-        );
+        core::show_help_content("compiler", env!("CARGO_PKG_DESCRIPTION"));
     } else {
         for arg in args {
             // If the argument isn't the first argument, so can parse it.
