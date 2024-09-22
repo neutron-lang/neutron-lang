@@ -1,183 +1,58 @@
 use crate::notify::Message;
+use crate::types::tokens;
 use logos::{Lexer, Logos};
 use std::process;
 
-// All tokens of the language
-#[derive(Logos, Debug, Clone, PartialEq)]
-#[logos(extras = (usize, usize, String))]
-pub enum Token {
-    #[token("(", token_callback)]
-    LeftParenthesis((usize, usize, String)),
-    #[token(")", token_callback)]
-    RigthParenthesis((usize, usize, String)),
+// Lexer the input and returns a vector of tokens
+pub fn lex_source(input: &str) -> Vec<tokens::Token> {
+    let mut lex = tokens::TokenType::lexer(input);
+    let mut token_position = tokens::Position { line: 0, column: 0 };
+    let mut result = vec![];
 
-    #[token("[", token_callback)]
-    LeftBrace((usize, usize, String)),
-    #[token("]", token_callback)]
-    RigthBrace((usize, usize, String)),
-
-    #[token("{", token_callback)]
-    LeftBracket((usize, usize, String)),
-    #[token("}", token_callback)]
-    RigthBracket((usize, usize, String)),
-
-    #[token("-#", token_callback)]
-    OpenComment((usize, usize, String)),
-
-    #[token("#-", token_callback)]
-    CloseComment((usize, usize, String)),
-
-    #[token(".", token_callback)]
-    Period((usize, usize, String)),
-
-    #[token(",", token_callback)]
-    Comma((usize, usize, String)),
-
-    #[token(":", token_callback)]
-    Column((usize, usize, String)),
-
-    #[token(";", token_callback)]
-    SemiColumn((usize, usize, String)),
-
-    #[token(r#"'"#, token_callback)]
-    SingleQuote((usize, usize, String)),
-    #[token(r#"""#, token_callback)]
-    DoubleQuotes((usize, usize, String)),
-
-    #[regex(r"\n", newline_callback)]
-    NewLine,
-
-    #[token(" ", token_callback)]
-    Space((usize, usize, String)),
-
-    #[token("import", token_callback)]
-    #[token("func", token_callback)]
-    #[token("var", token_callback)]
-    #[token("if", token_callback)]
-    #[token("else", token_callback)]
-    #[token("class", token_callback)]
-    #[token("struct", token_callback)]
-    #[token("int", token_callback)]
-    #[token("float", token_callback)]
-    #[token("bool", token_callback)]
-    #[token("str", token_callback)]
-    #[token("void", token_callback)]
-    Keyword((usize, usize, String)),
-
-    #[regex("[a-zA-Z0-9_]+", token_callback)]
-    Identifier((usize, usize, String)),
-
-    #[token("=", token_callback)]
-    #[token("+", token_callback)]
-    #[token("-", token_callback)]
-    #[token("*", token_callback)]
-    #[token("/", token_callback)]
-    #[token("%", token_callback)]
-    #[token("<", token_callback)]
-    #[token(">", token_callback)]
-    #[token("!", token_callback)]
-    #[token("+=", token_callback)]
-    #[token("-=", token_callback)]
-    #[token("*=", token_callback)]
-    #[token("/=", token_callback)]
-    #[token("%=", token_callback)]
-    #[token("==", token_callback)]
-    #[token("!=", token_callback)]
-    #[token(">=", token_callback)]
-    #[token("<=", token_callback)]
-    #[token("->", token_callback)]
-    Operator((usize, usize, String)),
-
-    #[regex("[0-9]+", priority = 3, callback = token_callback)]
-    Number((usize, usize, String)),
-}
-
-fn token_callback(lex: &mut Lexer<Token>) -> (usize, usize, String) {
-    let value = lex.slice();
-    let position = position_callback(lex);
-
-    (position.0, position.1, value.to_string())
-}
-
-fn newline_callback(lex: &mut Lexer<Token>) {
-    lex.extras.0 += 1;
-    lex.extras.1 = lex.span().end;
-}
-
-// Compute the line and column position for the current word.
-fn position_callback(lex: &mut Lexer<Token>) -> (usize, usize) {
-    let line = lex.extras.0;
-    let column = lex.span().start - lex.extras.1;
-
-    (line, column)
-}
-
-impl Token {
-    pub fn lex_trim(result: &Vec<Token>) -> Vec<Token> {
-        let mut in_string: bool = false;
-        let mut trim_result = vec![];
-
-        for token in result {
-            if in_string {
+    while let Some(token_type) = lex.next() {
+        match token_type {
+            Ok(token) => {
+                // If the token type is a new line token, so update the token position
                 match token {
-                    Token::DoubleQuotes(_) => {
-                        in_string = false;
-                        trim_result.insert(trim_result.len(), token.clone());
-                    }
-                    _ => trim_result.insert(trim_result.len(), token.clone()),
+                    tokens::TokenType::NewLine => token_position.line += 1,
+                    _ => token_position.column = lex.span().start - lex.extras.1,
                 }
-            } else {
-                match token {
-                    Token::DoubleQuotes(_) => {
-                        in_string = true;
-                        trim_result.insert(trim_result.len(), token.clone());
-                    }
-                    Token::NewLine => continue,
-                    Token::Space(_) => continue,
-                    _ => trim_result.insert(trim_result.len(), token.clone()),
-                }
+
+                // A new token
+                let mut tk = tokens::Token {
+                    token_type: token.clone(),
+                    token_value: lex.slice().to_string(),
+                    line: token_position.line,
+                    column: token_position.column,
+                };
+
+                // Insert the new token in the result vector
+                result.insert(result.len(), tk);
             }
-        }
-
-        return trim_result;
-    }
-}
-
-pub fn lex_source(source: &String) -> Vec<Token> {
-    let mut lex = Token::lexer(source);
-    let mut lexer_result = vec![];
-    let mut message = Message {
-        text: String::new(),
-        line: 0,
-        column: 0,
-    };
-    let mut error_count = 0;
-    let mut can_proceed = true;
-
-    while let Some(result) = lex.next() {
-        match result {
-            Ok(token) => lexer_result.insert(lexer_result.len(), token),
             Err(_) => {
-                message.text = String::from(format!("{:?} -> non existent token.", lex.slice()));
-                message.line = lex.extras.0;
-                message.column = lex.span().start - lex.extras.1;
-
-                message.show_error();
-
-                error_count += 1;
-                can_proceed = false;
+                eprintln!(
+                    "- [error] -> ({}:{}): {} undefined token.",
+                    token_position.line,
+                    lex.span().start - lex.extras.1,
+                    lex.slice()
+                )
             }
         }
     }
 
-    if can_proceed {
-        lexer_result = Token::lex_trim(&lexer_result);
-    } else {
-        message.text = String::from(format!("Can't proceed due by {} errors.", error_count));
-        message.show_message("compiler".to_string());
-        process::exit(1);
+    return lex_trim_result(result);
+}
+
+pub fn lex_trim_result(input: Vec<tokens::Token>) -> Vec<tokens::Token> {
+    let mut result = vec![];
+
+    for token in input {
+        match token.token_type {
+            tokens::TokenType::NewLine => continue,
+            tokens::TokenType::Space => continue,
+            _ => result.insert(result.len(), token),
+        }
     }
 
-    // dbg!(&lexer_result);
-    return lexer_result;
+    return result;
 }

@@ -1,4 +1,4 @@
-use crate::frontend::lexer::Token;
+use crate::types::tokens::*;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
