@@ -1,4 +1,4 @@
-use core::{self, notify};
+use core::{self, analyze_source, notify};
 use std::env;
 
 struct Flags {
@@ -47,8 +47,6 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     let cpath = env::current_dir().unwrap();
                     let source_path = cpath.into_os_string().into_string().unwrap() + "/" + arg;
 
-                    let source = core::read_source(&source_path);
-
                     notify::Message {
                         text: format!("compiling -> {}", arg),
                         line: 0,
@@ -56,9 +54,7 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     }
                     .show_message("compiler".to_string());
 
-                    let lexer_result = core::frontend::lexer::lex_source(&source);
-                    let parser = core::frontend::parser::Parser::new(lexer_result);
-                    dbg!(parser);
+                    dbg!(analyze_source(&source_path, arg));
                 }
             }
         }

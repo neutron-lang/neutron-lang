@@ -1,6 +1,7 @@
+use crate::frontend::lexer::{newline_callback, word_callback};
 use logos::{Lexer, Logos};
 
-// All tokens of the language
+/// All tokens of the language
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[logos(extras = (usize, usize))]
 pub enum TokenType {
@@ -56,6 +57,9 @@ pub enum TokenType {
     CloseComment,
 
     // Declaration keywords
+    #[token("namespce", word_callback)]
+    KwNamespace,
+
     #[token("import", word_callback)]
     KwImport,
 
@@ -204,29 +208,11 @@ pub enum TokenType {
     Number,
 }
 
-// A token struct who stores the token type, value and the position of the token
+/// A token struct who stores the token type, value and the position of the token
 #[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub token_value: String,
     pub line: usize,
     pub column: usize,
-}
-
-// A struct that stores a position -> (line and column)
-pub struct Position {
-    pub line: usize,
-    pub column: usize,
-}
-
-/// Update the line count and the char index.
-fn newline_callback(lex: &mut Lexer<TokenType>) {
-    lex.extras.0 += 1;
-    lex.extras.1 = lex.span().end;
-}
-
-/// Compute the line and column position for the current word.
-fn word_callback(lex: &mut Lexer<TokenType>) {
-    let line = lex.extras.0;
-    let column = lex.span().start - lex.extras.1;
 }

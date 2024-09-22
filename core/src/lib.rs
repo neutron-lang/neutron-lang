@@ -1,9 +1,19 @@
 use colored::Colorize;
 use std::fs;
+use std::process;
 
 pub mod frontend;
 pub mod notify;
 pub mod types;
+
+/// Lex and parse the input file, and return a bytecode
+pub fn analyze_source(file_path: &String, file_name: &String) -> frontend::parser::Parser {
+    let source = read_source(file_path, file_name);
+    let lexer_result = frontend::lexer::lex_source(&source);
+    let parser_result = frontend::parser::Parser::new(lexer_result);
+
+    return parser_result;
+}
 
 // TODO: Make a better help mensage for the users
 pub fn show_help_content(from: &str, description: &str) {
@@ -25,9 +35,20 @@ pub fn show_help_content(from: &str, description: &str) {
     println!("");
 }
 
-// Read the content of the source file
-pub fn read_source(file_path: &String) -> String {
-    let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
+/// Read the content of the input file
+pub fn read_source(file_path: &String, file_name: &String) -> String {
+    let contents = match fs::read_to_string(file_path) {
+        Ok(value) => value,
+        Err(e) => {
+            notify::Message {
+                text: String::from(format!("{} -> {:?}", file_name, e.kind())),
+                line: 0,
+                column: 0,
+            }
+            .show_message("neutron".to_string());
+            process::exit(1);
+        }
+    };
 
     return contents;
 }

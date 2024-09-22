@@ -13,7 +13,7 @@ impl Message {
 
     pub fn show_error(&self) {
         println!(
-            "- [{}]: ({},{}) -> {}",
+            "- [{}]: ({}:{}) -> {}",
             "error".red(),
             self.line + 1,
             self.column + 1,
@@ -23,7 +23,7 @@ impl Message {
 
     pub fn show_warning(&self) {
         println!(
-            "- [{}]: ({},{}) -> {}",
+            "- [{}]: ({}:{}) -> {}",
             "warning".yellow(),
             self.line + 1,
             self.column + 1,
