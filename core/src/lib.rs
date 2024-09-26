@@ -10,7 +10,9 @@ pub mod types;
 pub fn analyze_source(file_path: &String, file_name: &String) -> frontend::parser::Parser {
     let source = read_source(file_path, file_name);
     let lexer_result = frontend::lexer::lex_source(&source);
-    let parser_result = frontend::parser::Parser::new(lexer_result);
+    let mut parser_result = frontend::parser::Parser::new(lexer_result);
+    parser_result.parse_tokens();
+    dbg!(&parser_result);
 
     return parser_result;
 }
