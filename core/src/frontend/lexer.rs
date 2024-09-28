@@ -70,6 +70,16 @@ pub fn lex_source(input: &str) -> Vec<Token> {
         process::exit(1);
     }
 
+    result.insert(
+        result.len(),
+        Token {
+            token_type: TokenType::Eof,
+            token_value: String::from("\0"),
+            line: token_position.line.clone(),
+            column: token_position.column.clone() + 1,
+        },
+    );
+
     return result;
 }
 

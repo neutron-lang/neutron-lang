@@ -68,6 +68,12 @@ pub enum Statement {
 }
 
 #[derive(Debug, Clone)]
+pub enum Loop {
+    Yes,
+    No,
+}
+
+#[derive(Debug, Clone)]
 pub struct FuncParam {
     pub name: String,
     pub r#type: bult_in_types::Types,

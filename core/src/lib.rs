@@ -12,7 +12,7 @@ pub fn analyze_source(file_path: &String, file_name: &String) -> frontend::parse
     let lexer_result = frontend::lexer::lex_source(&source);
     let mut parser_result = frontend::parser::Parser::new(lexer_result);
     parser_result.parse_tokens();
-    dbg!(&parser_result);
+    // dbg!(&parser_result);
 
     return parser_result;
 }

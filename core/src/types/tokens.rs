@@ -1,5 +1,5 @@
 use crate::frontend::lexer::{newline_callback, word_callback};
-use logos::{Lexer, Logos};
+use logos::Logos;
 
 /// All tokens of the language
 #[derive(Logos, Debug, Clone, PartialEq)]
@@ -11,6 +11,9 @@ pub enum TokenType {
 
     #[regex(r"[ \t]", word_callback)]
     Space,
+
+    #[token("\0", word_callback)]
+    Eof,
 
     // Punctuation
     #[token(".", word_callback)]
@@ -119,6 +122,9 @@ pub enum TokenType {
 
     #[token("bool", word_callback)]
     Bool,
+
+    #[token("char", word_callback)]
+    Char,
 
     #[token("str", word_callback)]
     Str,
