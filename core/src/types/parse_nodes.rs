@@ -8,8 +8,14 @@ pub enum Statement {
     },
     VariableDeclaration {
         start: others::Position,
+        name: String,
+        // kind: VarDeclarationKind,
+        r#type: bult_in_types::Types,
+        value: Option<Expression>,
+    },
+    ConstantDeclaration {
+        start: others::Position,
         name: Option<String>,
-        kind: VarDeclarationKind,
         r#type: bult_in_types::Types,
         value: Expression,
     },

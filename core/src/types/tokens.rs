@@ -202,9 +202,12 @@ pub enum TokenType {
     #[token("%=", word_callback)]
     OpAssignRest,
 
-    // Special operators -> Assignment or acess
+    // Special operators -> Assignment, acess or set something
     #[token("->", word_callback)]
     OpSetOrAcess,
+
+    #[token(":=", word_callback)]
+    OpInferredTypeAssing,
 
     // Literals
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*", word_callback)]
