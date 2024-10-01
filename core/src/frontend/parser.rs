@@ -143,6 +143,10 @@ impl Parser {
         let mut statement: Statement;
 
         while !self.peek_expect(&TokenType::RBracket) || !self.peek_expect(&TokenType::Eof) {
+            if self.peek_expect(&TokenType::RBracket) {
+                break;
+            }
+
             statement = match self.current_type() {
                 TokenType::KwVar => {
                     let declaration = self.parse_var_statement();
@@ -150,8 +154,7 @@ impl Parser {
 
                     declaration
                 }
-                TokenType::RBracket => break,
-                _ => break,
+                _ => expected_error("a statement", self.current()),
             }
         }
 
@@ -203,9 +206,10 @@ impl Parser {
 
         // '{' <- The start of the code block of the function
         expected_or_error(&TokenType::LBracket, "'{'", self.current());
-        self.advance();
 
         let function_body: Option<Vec<Statement>> = self.parse_block(&Loop::No);
+
+        // '}' <- The end of the code block of the function
     }
 
     fn parse_var_statement(&mut self) -> Statement {
