@@ -213,8 +213,20 @@ pub enum TokenType {
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*", word_callback)]
     Identifier,
 
-    #[regex("[0-9]+")]
+    #[regex("[0-9]+", word_callback)]
     Number,
+
+    #[regex(r#"'([^"\\]|\\["\\bnfrt]|u[a-fA-F0-9]{4})*'"#, word_callback)]
+    CharLiteral,
+
+    #[regex(r#""([^"\\]|\\["\\bnfrt]|u[a-fA-F0-9]{4})*""#, word_callback)]
+    StringLiteral,
+
+    #[token("true", word_callback)]
+    True,
+
+    #[token("false", word_callback)]
+    False,
 }
 
 /// A token struct who stores the token type, value and the position of the token

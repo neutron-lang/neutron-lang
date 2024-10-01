@@ -1,3 +1,1 @@
-func main(arg1: str, arg2: int) -> void {
-    var test: int;
-}
+func main(arg: int, arg2: str) -> void {}

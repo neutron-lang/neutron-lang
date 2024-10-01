@@ -1,8 +1,9 @@
 use crate::{
+    error_handler::*,
     notify,
     types::{bult_in_types::*, others::*, parse_nodes::*, tokens::*},
 };
-use std::{iter::Peekable, process::exit, ptr::eq};
+use std::{iter::Peekable, process::exit};
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -35,14 +36,17 @@ impl Parser {
         }
     }
 
+    /// Return the current token
     fn current(&self) -> &Token {
         &self.current_token
     }
 
+    /// Return the current token type
     fn current_type(&mut self) -> &TokenType {
         &self.current().token_type
     }
 
+    /// Advance the index in the token vector
     fn advance(&mut self) {
         match self.current().token_type {
             TokenType::Eof => {}
@@ -60,40 +64,10 @@ impl Parser {
 
     /// If the current token it's the expected token return true, else return false
     fn peek_expect(&mut self, expected: &TokenType) -> bool {
-        self.peek_type().eq(expected)
+        self.current_type().eq(expected)
     }
 
-    fn expected_error(&self, expected: &str, found: &Token) {
-        notify::Message {
-            text: String::from(format!(
-                "expected {} but found {}",
-                expected, found.token_value
-            )),
-            line: self.current().line,
-            column: self.current().column,
-        }
-        .show_error();
-        exit(1);
-    }
-
-    fn expected_or_error(&mut self, expected_type: &TokenType, expected: &str, found: &Token) {
-        match eq(self.current_type(), expected_type) {
-            true => {
-                notify::Message {
-                    text: String::from(format!(
-                        "expected {} but found {}",
-                        expected, found.token_value
-                    )),
-                    line: found.line,
-                    column: found.column,
-                }
-                .show_error();
-                exit(1);
-            }
-            false => {}
-        }
-    }
-
+    /// Return the a value type based in the type of the current token
     fn get_type(&mut self) -> Types {
         match self.current_type() {
             TokenType::Int => Types::Int,
@@ -103,7 +77,9 @@ impl Parser {
             TokenType::Str => Types::Str,
             TokenType::Void => Types::Void,
             TokenType::Any => Types::Any,
-            _ => Types::Any,
+            _ => {
+                expected_error("a type", &self.current().to_owned());
+            }
         }
     }
 
@@ -116,23 +92,22 @@ impl Parser {
         let mut params: Vec<FuncParam> = Vec::new();
 
         // If doesn't have parameters
-        if self.current_type().eq(&TokenType::RParen) {
+        if self.peek_expect(&TokenType::RParen) {
             return params;
         }
 
         // while doesn't reaches ')' or EOF
         while !self.peek_expect(&TokenType::RParen) || !self.peek_expect(&TokenType::Eof) {
             // If the first piece of the param isn't a identifier (name)
-            if !self.current_type().eq(&TokenType::Identifier) {
-                self.expected_error("identifier", self.current());
-                exit(1);
+            if !self.peek_expect(&TokenType::Identifier) {
+                expected_error("identifier", &self.current().to_owned());
             }
 
-            let name = self.current().to_owned().token_value;
+            let name = self.current().token_value.to_owned();
             self.advance();
 
             // After the name ':'
-            self.expected_or_error(&TokenType::Colon, ":", &self.current().to_owned());
+            expected_or_error(&TokenType::Colon, ":", &self.current().to_owned());
             self.advance();
 
             // The type of the parameter
@@ -141,21 +116,19 @@ impl Parser {
 
             param = FuncParam { name, r#type };
 
-            if self.current_type().eq(&TokenType::RParen) {
+            if self.peek_expect(&TokenType::RParen) {
                 params.push(param.to_owned());
                 break;
-            } else if self.current_type().eq(&TokenType::Comma) {
+            } else if self.peek_expect(&TokenType::Comma) {
                 params.push(param.to_owned());
                 self.advance();
             } else {
-                self.expected_error(", or )", self.current());
-                exit(1);
+                expected_error(", or )", self.current());
             }
         }
 
-        if !self.current_type().eq(&TokenType::RParen) {
-            self.expected_error(")", self.current());
-            exit(1);
+        if !self.peek_expect(&TokenType::RParen) {
+            expected_error(")", self.current());
         }
 
         return params;
@@ -169,9 +142,7 @@ impl Parser {
         let mut block_statements: Vec<Statement> = Vec::new();
         let mut statement: Statement;
 
-        while !self.current_type().eq(&TokenType::RBracket)
-            || !self.current_type().eq(&TokenType::Eof)
-        {
+        while !self.peek_expect(&TokenType::RBracket) || !self.peek_expect(&TokenType::Eof) {
             statement = match self.current_type() {
                 TokenType::KwVar => {
                     let declaration = self.parse_var_statement();
@@ -179,12 +150,13 @@ impl Parser {
 
                     declaration
                 }
-                _ => exit(1),
+                TokenType::RBracket => break,
+                _ => break,
             }
         }
 
         // '}' <- The end of the block
-        self.expected_or_error(&TokenType::RBracket, "}", &self.current().to_owned());
+        expected_or_error(&TokenType::RBracket, "'}'", self.current());
 
         if block_statements.len() == 0 {
             return None;
@@ -198,20 +170,15 @@ impl Parser {
     fn parse_function_statement(&mut self) {
         // "func" <- Token
         let func_token = self.current().to_owned();
-        // self.advance();
+        self.advance();
 
-        // "name" <- The function identifier
-        self.expected_or_error(
-            &TokenType::Identifier,
-            "identifier",
-            &self.current().to_owned(),
-        );
+        // "name" <- The function name (identifier)
+        expected_or_error(&TokenType::Identifier, "identifier", self.current());
         let name = self.current().token_value.to_owned();
         self.advance();
 
         // '(' <- Start of the parameters after the function identifier
-        self.expected_or_error(&TokenType::LParen, "(", &self.current().to_owned());
-        self.advance();
+        expected_or_error(&TokenType::LParen, "(", &self.current().to_owned());
 
         // The function parameters
         let params: Vec<FuncParam> = self.parse_params();
@@ -224,29 +191,30 @@ impl Parser {
 
         // '->' <- To define the function return type
         // The type is optional
-        if !self.peek_expect(&TokenType::OpSetOrAcess) {
+        if self.peek_expect(&TokenType::OpSetOrAcess) {
             self.advance();
             r#type = self.get_type();
-        } else {
-            // self.advance();
+            self.advance();
+        } else if self.peek_expect(&TokenType::LBracket) {
             r#type = Types::Any;
+        } else {
+            expected_error("'->' or '{'", self.current());
         }
 
         // '{' <- The start of the code block of the function
-        self.expected_or_error(&TokenType::LBrace, "{", &self.current().to_owned());
+        expected_or_error(&TokenType::LBracket, "'{'", self.current());
         self.advance();
 
         let function_body: Option<Vec<Statement>> = self.parse_block(&Loop::No);
     }
 
     fn parse_var_statement(&mut self) -> Statement {
-        // "var" <- The start of the declaration
-        let var_token = self.current().clone();
-
+        // "var" <- Token
+        let var_token = self.current().to_owned();
         self.advance();
 
-        // "name" <- The identifier of the variable
-        self.expected_or_error(
+        // "name" <- The name (identifier) of the variable
+        expected_or_error(
             &TokenType::Identifier,
             "identifier",
             &self.current().to_owned(),
@@ -268,7 +236,8 @@ impl Parser {
             r#type = Types::Any;
         }
 
-        // ';' or a operator <- before the name or type of the variable
+        // ';' or a operator <- Before the name or type of the variable will declare a unitialized variable
+        // '=' or ':=' <- Will initialize the variable
         if !self.peek_expect(&TokenType::SemiColon) {
             let var_declaration = Statement::VariableDeclaration {
                 start: Position {
@@ -285,9 +254,19 @@ impl Parser {
             match self.current_type() {
                 &TokenType::OpAssign => {}
                 &TokenType::OpInferredTypeAssing => {}
-                _ => self.expected_error("'=' or ':='", self.current()),
+                _ => expected_error("'=' or ':='", &self.current().to_owned()),
             }
+
+            self.advance();
         }
+
+        dbg!(self.current().clone());
+        expect_expression_or_error(&self.current().to_owned());
+
+        self.advance();
+
+        // ';' <- In the end
+        expected_or_error(&TokenType::SemiColon, ";", &self.current().to_owned());
 
         // The final variable declaration statement result
         let var_declaration = Statement::VariableDeclaration {

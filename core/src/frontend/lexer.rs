@@ -74,7 +74,7 @@ pub fn lex_source(input: &str) -> Vec<Token> {
         result.len(),
         Token {
             token_type: TokenType::Eof,
-            token_value: String::from("\0"),
+            token_value: String::from("EOF"),
             line: token_position.line.clone(),
             column: token_position.column.clone() + 1,
         },
@@ -83,9 +83,9 @@ pub fn lex_source(input: &str) -> Vec<Token> {
     return result;
 }
 
-/// Remove unused spaces
+/// Remove unused spaces and new lines
 pub fn lex_trim_result(input: Vec<Token>) -> Vec<Token> {
-    let mut result = vec![];
+    let mut result: Vec<Token> = Vec::new();
 
     for token in input {
         match token.token_type {
