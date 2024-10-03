@@ -1,1 +1,3 @@
-func main(arg: int, arg2: str) -> void {}
+func main(arg: int, arg2: str) -> void {
+    var test: str = "minecraft é bom";
+}

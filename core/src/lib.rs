@@ -9,9 +9,13 @@ pub mod types;
 
 /// Lex and parse the input file, and return a bytecode
 pub fn analyze_source(file_path: &String, file_name: &String) -> frontend::parser::Parser {
+    // The source code
     let source = read_source(file_path, file_name);
+
+    // Lex the code and returns a vec of tokens
     let lexer_result = frontend::lexer::lex_source(&source);
-    dbg!(&lexer_result);
+
+    // Parse the lexer result and returns a ast
     let mut parser_result = frontend::parser::Parser::new(lexer_result);
     parser_result.parse_tokens();
     // dbg!(&parser_result);

@@ -62,14 +62,6 @@ pub fn lex_source(input: &str) -> Vec<Token> {
         }
     }
 
-    if can_proceed {
-        result = lex_trim_result(result);
-    } else {
-        message.text = String::from(format!("Can't proceed due by {} errors.", error_count));
-        message.show_message("compiler".to_string());
-        process::exit(1);
-    }
-
     result.insert(
         result.len(),
         Token {
@@ -79,6 +71,14 @@ pub fn lex_source(input: &str) -> Vec<Token> {
             column: token_position.column.clone() + 1,
         },
     );
+
+    if can_proceed {
+        result = lex_trim_result(result);
+    } else {
+        message.text = String::from(format!("Can't proceed due by {} errors.", error_count));
+        message.show_message("compiler".to_string());
+        process::exit(1);
+    }
 
     return result;
 }

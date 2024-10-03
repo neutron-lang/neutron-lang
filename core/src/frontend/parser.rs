@@ -1,6 +1,5 @@
 use crate::{
     error_handler::*,
-    notify,
     types::{bult_in_types::*, others::*, parse_nodes::*, tokens::*},
 };
 use std::{iter::Peekable, process::exit};
@@ -13,6 +12,7 @@ pub struct Parser {
 }
 
 impl Parser {
+    /// Returns a new parser struct
     pub fn new(input: Vec<Token>) -> Self {
         let mut input_iter = input.into_iter().peekable();
         Self {
@@ -25,8 +25,9 @@ impl Parser {
         }
     }
 
+    /// Parse the tokens while doesn't reaches the EOF
     pub fn parse_tokens(&mut self) {
-        while !self.current_type().eq(&TokenType::Eof) {
+        while !self.peek_expect(&TokenType::Eof) {
             let ast_node = match &self.current_type() {
                 TokenType::KwFunc => self.parse_function_statement(),
                 _ => {}
@@ -54,7 +55,7 @@ impl Parser {
         }
     }
 
-    /// Return the current token type or the eof
+    /// Returns the next token type
     fn peek_type(&mut self) -> &TokenType {
         match self.tokens.peek() {
             Some(token) => &token.token_type,
@@ -78,11 +79,12 @@ impl Parser {
             TokenType::Void => Types::Void,
             TokenType::Any => Types::Any,
             _ => {
-                expected_error("a type", &self.current().to_owned());
+                expected_error("a type", self.current());
             }
         }
     }
 
+    /// Parse the parameters inside parenthesis -> (param: type, other_param: type)
     fn parse_params(&mut self) -> Vec<FuncParam> {
         // '('
         self.advance();
@@ -100,14 +102,14 @@ impl Parser {
         while !self.peek_expect(&TokenType::RParen) || !self.peek_expect(&TokenType::Eof) {
             // If the first piece of the param isn't a identifier (name)
             if !self.peek_expect(&TokenType::Identifier) {
-                expected_error("identifier", &self.current().to_owned());
+                expected_error("identifier", self.current());
             }
 
             let name = self.current().token_value.to_owned();
             self.advance();
 
             // After the name ':'
-            expected_or_error(&TokenType::Colon, ":", &self.current().to_owned());
+            expected_or_error(&TokenType::Colon, ":", self.current());
             self.advance();
 
             // The type of the parameter
@@ -116,6 +118,7 @@ impl Parser {
 
             param = FuncParam { name, r#type };
 
+            // The end of the parameters or another parameter
             if self.peek_expect(&TokenType::RParen) {
                 params.push(param.to_owned());
                 break;
@@ -132,6 +135,76 @@ impl Parser {
         }
 
         return params;
+    }
+
+    fn parse_identifier(&mut self) -> Expression {
+        match self.current_type() {
+            TokenType::Identifier => match self.peek_type() {
+                TokenType::LParen => self.parse_function_call(),
+                _ => Expression::Identifier(self.current().token_value.to_owned()),
+            },
+            _ => expected_error("identifier", self.current()),
+        }
+    }
+
+    /// Parse a function call -> function_identifier(arguments)
+    fn parse_function_call(&mut self) -> Expression {
+        // The function identifier(name)
+        let name = self.current().token_value.to_owned();
+
+        // '(' <- The start of the arguments
+        self.advance();
+
+        // A vector containing the current arguments of the function call
+        let mut argument_vec: Vec<Expression> = Vec::new();
+
+        // The current expression
+        let mut expression: Expression;
+
+        // While doesn't reaches the ')'
+        while !self.peek_expect(&TokenType::RParen) {
+            // If reaches the ')' <- End of the arguments
+            if self.peek_expect(&TokenType::RParen) {
+                break;
+            }
+
+            // If reaches the EOF before the ')'
+            if self.peek_expect(&TokenType::Eof) {
+                expected_error("')'", self.current());
+            }
+
+            // If reaches ',' starts a new argument
+            if self.peek_expect(&TokenType::Comma) {
+                self.advance();
+                continue;
+            }
+
+            // Parse the expression for the current argument
+            expression = self.parse_expression();
+
+            // If after the expression, is a ',' or ')', push the current argument and advance
+            if self.peek_expect(&TokenType::Comma) || self.peek_expect(&TokenType::RParen) {
+                argument_vec.push(expression);
+                self.advance();
+            } else {
+                self.advance();
+                expected_error("',' or ')'", self.current());
+            }
+        }
+
+        // If the call doesn't have arguments, return a function without arguments ;)
+        if argument_vec.len() == 0 {
+            return Expression::Call {
+                name: name,
+                arguments: None,
+            };
+        }
+
+        // A full call with arguments
+        return Expression::Call {
+            name,
+            arguments: Some(Box::new(argument_vec)),
+        };
     }
 
     fn parse_block(&mut self, is_loop: &Loop) -> Option<Vec<Statement>> {
@@ -168,6 +241,34 @@ impl Parser {
         }
     }
 
+    fn parse_expression(&mut self) -> Expression {
+        self.parse_unary_expression()
+    }
+
+    fn parse_primary_expression(&mut self) -> Expression {
+        let token = self.current().to_owned();
+
+        match token.token_type {
+            TokenType::Identifier => self.parse_identifier(),
+            _ => exit(1),
+        }
+    }
+
+    fn parse_unary_expression(&mut self) -> Expression {
+        match self.current_type() {
+            TokenType::OpPlus => {
+                todo!()
+            }
+            TokenType::OpMinus => {
+                todo!()
+            }
+            TokenType::OpNot => {
+                todo!()
+            }
+            _ => self.parse_primary_expression(),
+        }
+    }
+
     /// Parse and return a statement of function
     // func name(arg1: type, arg2: type) -> type {}
     fn parse_function_statement(&mut self) {
@@ -181,7 +282,7 @@ impl Parser {
         self.advance();
 
         // '(' <- Start of the parameters after the function identifier
-        expected_or_error(&TokenType::LParen, "(", &self.current().to_owned());
+        expected_or_error(&TokenType::LParen, "(", self.current());
 
         // The function parameters
         let params: Vec<FuncParam> = self.parse_params();
@@ -220,29 +321,35 @@ impl Parser {
         // "name" <- The name (identifier) of the variable
         expected_or_error(
             &TokenType::Identifier,
-            "identifier",
-            &self.current().to_owned(),
+            "variable identifier",
+            self.current(),
         );
 
         let name = self.current().token_value.to_owned();
         self.advance();
 
         // The type of the variable
-        let r#type: Types;
+        let mut r#type: Types = Types::Any;
 
         // ':' <- After the variable identifier to define the variable type
         // The type is optional
-        if !self.peek_expect(&TokenType::Colon) {
+        if self.peek_expect(&TokenType::Colon) {
             self.advance();
             r#type = self.get_type(); // ...: type ...
             self.advance();
+        } else if self.peek_expect(&TokenType::OpAssign)
+            || self.peek_expect(&TokenType::OpInferredTypeAssing)
+            || self.peek_expect(&TokenType::SemiColon)
+        {
         } else {
-            r#type = Types::Any;
+            expected_error("':', '=' or ':='", self.current());
         }
 
         // ';' or a operator <- Before the name or type of the variable will declare a unitialized variable
         // '=' or ':=' <- Will initialize the variable
-        if !self.peek_expect(&TokenType::SemiColon) {
+        if self.peek_expect(&TokenType::SemiColon) {
+            self.advance();
+
             let var_declaration = Statement::VariableDeclaration {
                 start: Position {
                     line: var_token.line,
@@ -258,19 +365,21 @@ impl Parser {
             match self.current_type() {
                 &TokenType::OpAssign => {}
                 &TokenType::OpInferredTypeAssing => {}
-                _ => expected_error("'=' or ':='", &self.current().to_owned()),
+                _ => expected_error("'=' or ':='", self.current()),
             }
 
             self.advance();
         }
 
-        dbg!(self.current().clone());
-        expect_expression_or_error(&self.current().to_owned());
+        // The value of the variable is a expression
+        expect_expression_or_error(self.current());
+        self.parse_expression();
 
         self.advance();
 
         // ';' <- In the end
-        expected_or_error(&TokenType::SemiColon, ";", &self.current().to_owned());
+        expected_or_error(&TokenType::SemiColon, ";", self.current());
+        self.advance();
 
         // The final variable declaration statement result
         let var_declaration = Statement::VariableDeclaration {
