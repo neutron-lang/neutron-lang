@@ -2,7 +2,7 @@ use crate::{
     error_handler::*,
     types::{bult_in_types::*, others::*, parse_nodes::*, tokens::*},
 };
-use std::{any::Any, iter::Peekable, process::exit};
+use std::iter::Peekable;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -25,15 +25,26 @@ impl Parser {
         }
     }
 
+    fn push_statement(&mut self, statement: Statement) {
+        match &mut self.ast {
+            Statement::Program { body, .. } => {
+                body.push(statement);
+            }
+            _ => {}
+        }
+    }
+
     /// Parse the tokens while doesn't reaches the EOF
     pub fn parse_tokens(&mut self) {
         while !self.peek_expect(&TokenType::Eof) {
             let ast_node = match &self.current_type() {
+                TokenType::KwVar => self.parse_var_statement(),
                 TokenType::KwFunc => self.parse_function_statement(),
-                _ => {}
+                _ => expected_error("a statement", self.current()),
             };
 
-            self.advance();
+            self.push_statement(ast_node);
+            // self.advance();
         }
     }
 
@@ -445,7 +456,7 @@ impl Parser {
 
     /// Parse and return a statement of a function
     // func name(arg1: type, arg2: type) -> type {}
-    fn parse_function_statement(&mut self) {
+    fn parse_function_statement(&mut self) -> Statement {
         // "func" <- Token
         let func_token = self.current().to_owned();
         self.advance();
@@ -485,6 +496,25 @@ impl Parser {
         let function_body: Option<Vec<Statement>> = self.parse_block(&Loop::No);
 
         // '}' <- The end of the code block of the function
+        self.advance();
+
+        return Statement::FuctionDeclaration {
+            start: Position {
+                line: func_token.line,
+                column: func_token.column,
+            },
+            name,
+            r#type,
+            params: if params.len() == 0 {
+                Some(params)
+            } else {
+                None
+            },
+            body: match function_body {
+                Some(body) => Some(Box::new(body)),
+                _ => None,
+            },
+        };
     }
 
     /// Parse and return a statement of a varibale

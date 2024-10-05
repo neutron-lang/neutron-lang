@@ -24,7 +24,7 @@ pub enum Statement {
         name: String,
         r#type: bult_in_types::Types,
         params: Option<Vec<FuncParam>>,
-        body: Box<Vec<Statement>>,
+        body: Option<Box<Vec<Statement>>>,
     },
     If {
         start: others::Position,
