@@ -137,6 +137,7 @@ impl Parser {
         return params;
     }
 
+    /// Parse identifiers -> function calls, push identifier value...
     fn parse_identifier(&mut self) -> Expression {
         match self.current_type() {
             TokenType::Identifier => match self.peek_type() {
@@ -201,11 +202,6 @@ impl Parser {
             };
         }
 
-        dbg!(Expression::Call {
-            name: name.clone(),
-            arguments: Some(Box::new(argument_vec.clone())),
-        });
-
         // A full call with arguments
         return Expression::Call {
             name,
@@ -213,6 +209,7 @@ impl Parser {
         };
     }
 
+    /// Parse code blocks
     fn parse_block(&mut self, is_loop: &Loop) -> Option<Vec<Statement>> {
         // '{' <- The start of the block
         self.advance();
@@ -229,12 +226,13 @@ impl Parser {
             statement = match self.current_type() {
                 TokenType::KwVar => {
                     let declaration = self.parse_var_statement();
-                    dbg!(&declaration);
 
                     declaration
                 }
                 _ => expected_error("a statement", self.current()),
-            }
+            };
+
+            block_statements.push(statement);
         }
 
         // '}' <- The end of the block
@@ -247,11 +245,12 @@ impl Parser {
         }
     }
 
-    // Parsing expressions related function
+    /// Parsing expressions related function
     fn parse_expression(&mut self) -> Expression {
         self.parse_or_expression()
     }
 
+    /// 'or' or '||' <- Logical or expressions
     fn parse_or_expression(&mut self) -> Expression {
         let mut left = self.parse_and_expression();
 
@@ -273,6 +272,7 @@ impl Parser {
         return left;
     }
 
+    /// 'and' or '&&' <- Logical and expressions
     fn parse_and_expression(&mut self) -> Expression {
         let mut left = self.parse_comparision_expression();
 
@@ -294,6 +294,7 @@ impl Parser {
         return left;
     }
 
+    /// '==' or '!=' <- Comparision expressions
     fn parse_comparision_expression(&mut self) -> Expression {
         let mut left = self.parse_greater_or_smaller_expression();
 
@@ -317,8 +318,9 @@ impl Parser {
         return left;
     }
 
+    /// '<', '<=', '>' or '>=' <- Size expressions
     fn parse_greater_or_smaller_expression(&mut self) -> Expression {
-        let mut left = self.parse_plus_or_subtract_expression();
+        let mut left = self.parse_multiplicative_expression();
 
         while self.peek_type().eq(&TokenType::OpSmallerThan)
             || self.peek_type().eq(&TokenType::OpSmallerOrEqualsThan)
@@ -330,7 +332,7 @@ impl Parser {
             let operator = self.current().to_owned();
             self.advance();
 
-            let right = self.parse_plus_or_subtract_expression();
+            let right = self.parse_multiplicative_expression();
 
             left = Expression::Logical {
                 operator: operator.token_type,
@@ -342,16 +344,20 @@ impl Parser {
         return left;
     }
 
-    fn parse_plus_or_subtract_expression(&mut self) -> Expression {
-        let mut left = self.parse_multiplicative_expression();
+    /// '*', '/' or '%' <- Multiplication, division or rest expression
+    fn parse_multiplicative_expression(&mut self) -> Expression {
+        let mut left = self.parse_plus_or_subtract_expression();
 
-        while self.peek_type().eq(&TokenType::OpPlus) || self.peek_type().eq(&TokenType::OpMinus) {
+        while self.peek_type().eq(&TokenType::OpMultiply)
+            || self.peek_type().eq(&TokenType::OpDivision)
+            || self.peek_type().eq(&TokenType::OpRest)
+        {
             self.advance();
 
             let operator = self.current().to_owned();
             self.advance();
 
-            let right = self.parse_multiplicative_expression();
+            let right = self.parse_plus_or_subtract_expression();
 
             left = Expression::Binary {
                 operator: operator.token_type,
@@ -363,13 +369,11 @@ impl Parser {
         return left;
     }
 
-    fn parse_multiplicative_expression(&mut self) -> Expression {
+    /// '+' or '-' <- Sum or subratction expression
+    fn parse_plus_or_subtract_expression(&mut self) -> Expression {
         let mut left = self.parse_unary_expression();
 
-        while self.peek_type().eq(&TokenType::OpMultiply)
-            || self.peek_type().eq(&TokenType::OpDivision)
-            || self.peek_type().eq(&TokenType::OpRest)
-        {
+        while self.peek_type().eq(&TokenType::OpPlus) || self.peek_type().eq(&TokenType::OpMinus) {
             self.advance();
 
             let operator = self.current().to_owned();
@@ -387,6 +391,7 @@ impl Parser {
         return left;
     }
 
+    /// Parse the expression
     fn parse_primary_expression(&mut self) -> Expression {
         let token = self.current().to_owned();
 
@@ -413,6 +418,7 @@ impl Parser {
         }
     }
 
+    /// Parse unary expressions
     fn parse_unary_expression(&mut self) -> Expression {
         match self.current_type() {
             TokenType::OpPlus => {
@@ -437,7 +443,7 @@ impl Parser {
         }
     }
 
-    /// Parse and return a statement of function
+    /// Parse and return a statement of a function
     // func name(arg1: type, arg2: type) -> type {}
     fn parse_function_statement(&mut self) {
         // "func" <- Token
@@ -481,6 +487,7 @@ impl Parser {
         // '}' <- The end of the code block of the function
     }
 
+    /// Parse and return a statement of a varibale
     fn parse_var_statement(&mut self) -> Statement {
         // "var" <- Token
         let var_token = self.current().to_owned();
