@@ -143,7 +143,7 @@ pub enum TokenType {
     OpMinus,
 
     #[token("*", word_callback)]
-    OpAsterisk,
+    OpMultiply,
 
     #[token("/", word_callback)]
     OpDivision,

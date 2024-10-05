@@ -133,3 +133,10 @@ pub enum Expression {
         arguments: Option<Box<Vec<Expression>>>,
     },
 }
+
+#[derive(Debug, Clone)]
+pub enum LiteralType {
+    Numeric,
+    String,
+    Boolean,
+}

@@ -2,7 +2,7 @@ use crate::{
     error_handler::*,
     types::{bult_in_types::*, others::*, parse_nodes::*, tokens::*},
 };
-use std::{iter::Peekable, process::exit};
+use std::{any::Any, iter::Peekable, process::exit};
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -151,6 +151,7 @@ impl Parser {
     fn parse_function_call(&mut self) -> Expression {
         // The function identifier(name)
         let name = self.current().token_value.to_owned();
+        self.advance();
 
         // '(' <- The start of the arguments
         self.advance();
@@ -162,7 +163,7 @@ impl Parser {
         let mut expression: Expression;
 
         // While doesn't reaches the ')'
-        while !self.peek_expect(&TokenType::RParen) {
+        while !self.peek_expect(&TokenType::RParen) || !self.peek_expect(&TokenType::Eof) {
             // If reaches the ')' <- End of the arguments
             if self.peek_expect(&TokenType::RParen) {
                 break;
@@ -183,7 +184,7 @@ impl Parser {
             expression = self.parse_expression();
 
             // If after the expression, is a ',' or ')', push the current argument and advance
-            if self.peek_expect(&TokenType::Comma) || self.peek_expect(&TokenType::RParen) {
+            if self.peek_type().eq(&TokenType::Comma) || self.peek_type().eq(&TokenType::RParen) {
                 argument_vec.push(expression);
                 self.advance();
             } else {
@@ -195,10 +196,15 @@ impl Parser {
         // If the call doesn't have arguments, return a function without arguments ;)
         if argument_vec.len() == 0 {
             return Expression::Call {
-                name: name,
+                name,
                 arguments: None,
             };
         }
+
+        dbg!(Expression::Call {
+            name: name.clone(),
+            arguments: Some(Box::new(argument_vec.clone())),
+        });
 
         // A full call with arguments
         return Expression::Call {
@@ -241,8 +247,144 @@ impl Parser {
         }
     }
 
+    // Parsing expressions related function
     fn parse_expression(&mut self) -> Expression {
-        self.parse_unary_expression()
+        self.parse_or_expression()
+    }
+
+    fn parse_or_expression(&mut self) -> Expression {
+        let mut left = self.parse_and_expression();
+
+        while self.peek_type().eq(&TokenType::OpOr) {
+            self.advance();
+
+            let operator = self.current().to_owned();
+            self.advance();
+
+            let right = self.parse_and_expression();
+
+            left = Expression::Logical {
+                operator: operator.token_type,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+        }
+
+        return left;
+    }
+
+    fn parse_and_expression(&mut self) -> Expression {
+        let mut left = self.parse_comparision_expression();
+
+        while self.peek_type().eq(&TokenType::OpAnd) {
+            self.advance();
+
+            let operator = self.current().to_owned();
+            self.advance();
+
+            let right = self.parse_comparision_expression();
+
+            left = Expression::Logical {
+                operator: operator.token_type,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+        }
+
+        return left;
+    }
+
+    fn parse_comparision_expression(&mut self) -> Expression {
+        let mut left = self.parse_greater_or_smaller_expression();
+
+        while self.peek_type().eq(&TokenType::OpEquals)
+            || self.peek_type().eq(&TokenType::OpNotEquals)
+        {
+            self.advance();
+
+            let operator = self.current().to_owned();
+            self.advance();
+
+            let right = self.parse_greater_or_smaller_expression();
+
+            left = Expression::Logical {
+                operator: operator.token_type,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+        }
+
+        return left;
+    }
+
+    fn parse_greater_or_smaller_expression(&mut self) -> Expression {
+        let mut left = self.parse_plus_or_subtract_expression();
+
+        while self.peek_type().eq(&TokenType::OpSmallerThan)
+            || self.peek_type().eq(&TokenType::OpSmallerOrEqualsThan)
+            || self.peek_type().eq(&TokenType::OpGreaterThan)
+            || self.peek_type().eq(&TokenType::OpGreaterOrEqualsThan)
+        {
+            self.advance();
+
+            let operator = self.current().to_owned();
+            self.advance();
+
+            let right = self.parse_plus_or_subtract_expression();
+
+            left = Expression::Logical {
+                operator: operator.token_type,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+        }
+
+        return left;
+    }
+
+    fn parse_plus_or_subtract_expression(&mut self) -> Expression {
+        let mut left = self.parse_multiplicative_expression();
+
+        while self.peek_type().eq(&TokenType::OpPlus) || self.peek_type().eq(&TokenType::OpMinus) {
+            self.advance();
+
+            let operator = self.current().to_owned();
+            self.advance();
+
+            let right = self.parse_multiplicative_expression();
+
+            left = Expression::Binary {
+                operator: operator.token_type,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+        }
+
+        return left;
+    }
+
+    fn parse_multiplicative_expression(&mut self) -> Expression {
+        let mut left = self.parse_unary_expression();
+
+        while self.peek_type().eq(&TokenType::OpMultiply)
+            || self.peek_type().eq(&TokenType::OpDivision)
+            || self.peek_type().eq(&TokenType::OpRest)
+        {
+            self.advance();
+
+            let operator = self.current().to_owned();
+            self.advance();
+
+            let right = self.parse_primary_expression();
+
+            left = Expression::Binary {
+                operator: operator.token_type,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+        }
+
+        return left;
     }
 
     fn parse_primary_expression(&mut self) -> Expression {
@@ -250,20 +392,46 @@ impl Parser {
 
         match token.token_type {
             TokenType::Identifier => self.parse_identifier(),
-            _ => exit(1),
+            TokenType::Number => Expression::Literal {
+                r#type: TokenType::Number,
+                value: self.current().token_value.to_owned(),
+            },
+            TokenType::StringLiteral => Expression::Literal {
+                r#type: TokenType::StringLiteral,
+                value: self.current().token_value.to_owned(),
+            },
+            TokenType::True | TokenType::False => Expression::Literal {
+                r#type: TokenType::Bool,
+                value: self.current().token_value.to_owned(),
+            },
+            TokenType::Eof => {
+                expected_error("';'", &token);
+            }
+            _ => {
+                expected_error("expression", &token);
+            }
         }
     }
 
     fn parse_unary_expression(&mut self) -> Expression {
         match self.current_type() {
             TokenType::OpPlus => {
-                todo!()
+                self.advance();
+                self.parse_unary_expression()
             }
             TokenType::OpMinus => {
-                todo!()
+                self.advance();
+                Expression::Unary {
+                    operator: TokenType::OpMinus,
+                    operand: Box::new(self.parse_unary_expression()),
+                }
             }
             TokenType::OpNot => {
-                todo!()
+                self.advance();
+                Expression::Unary {
+                    operator: TokenType::OpNot,
+                    operand: Box::new(self.parse_unary_expression()),
+                }
             }
             _ => self.parse_primary_expression(),
         }
@@ -373,7 +541,7 @@ impl Parser {
 
         // The value of the variable is a expression
         expect_expression_or_error(self.current());
-        self.parse_expression();
+        let value = self.parse_expression();
 
         self.advance();
 
@@ -387,9 +555,9 @@ impl Parser {
                 line: var_token.line,
                 column: var_token.column,
             },
-            name: String::from("name"),
-            r#type: Types::Any,
-            value: None,
+            name,
+            r#type,
+            value: Some(value),
         };
 
         return var_declaration;
