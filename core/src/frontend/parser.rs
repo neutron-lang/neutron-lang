@@ -240,6 +240,12 @@ impl Parser {
 
                     declaration
                 }
+
+                TokenType::Identifier => {
+                    let identifier_statement = self.parse_identifier_statement();
+
+                    identifier_statement
+                }
                 _ => expected_error("a statement", self.current()),
             };
 
@@ -454,8 +460,7 @@ impl Parser {
         }
     }
 
-    /// Parse and return a statement of a function
-    // func name(arg1: type, arg2: type) -> type {}
+    /// Parse and return a statement of a function -> func name(arg1: type, arg2: type) -> type {function content}
     fn parse_function_statement(&mut self) -> Statement {
         // "func" <- Token
         let func_token = self.current().to_owned();
@@ -515,6 +520,33 @@ impl Parser {
                 _ => None,
             },
         };
+    }
+
+    /// Parse a function call -> function_name(args);
+    fn parse_function_call_statement(&mut self) -> Statement {
+        // function_name(args)
+        let call = Statement::FunctionCall(self.parse_function_call());
+        self.advance();
+
+        // ';' < after the call
+        expected_or_error(
+            &TokenType::SemiColon,
+            "the end of statement",
+            self.current(),
+        );
+        self.advance();
+
+        return call;
+    }
+
+    fn parse_identifier_statement(&mut self) -> Statement {
+        match self.current_type() {
+            TokenType::Identifier => match self.peek_type() {
+                TokenType::LParen => self.parse_function_call_statement(),
+                _ => expected_error("work in progress", self.current()),
+            },
+            _ => expected_error("identifier", self.current()),
+        }
     }
 
     /// Parse and return a statement of a varibale

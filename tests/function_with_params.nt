@@ -1,5 +1,9 @@
 var works: bool = true;
 
-func main(arg: int, arg2: str) -> void {
+func function(arg: int, arg2: str) -> void {
     var num: int = 10 + 5 / 3 * 101;
+}
+
+func main() -> void {
+    function(10, "nyaa");
 }
