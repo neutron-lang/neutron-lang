@@ -4,5 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+inkwell = { version = "0.5.0", features = ["llvm18-0"] }
+llvm-sys = { version = "180", features = ["prefer-dynamic"] }
 colored = "2"
 logos = "0.14.1"

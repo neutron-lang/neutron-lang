@@ -1,1 +1,1 @@
-pub mod nt_ir_generator;
+pub mod ir_generator;
