@@ -1,7 +1,6 @@
 use crate::notify::Message;
 use crate::types::tokens::*;
 use std::process::exit;
-use std::ptr::eq;
 
 /// [E01]
 pub fn expected_error(expected: &str, found: &Token) -> ! {

@@ -221,7 +221,7 @@ impl Parser {
     }
 
     /// Parse code blocks
-    fn parse_block(&mut self, is_loop: &Loop) -> Option<Vec<Statement>> {
+    fn parse_block(&mut self, _is_loop: &Loop) -> Option<Vec<Statement>> {
         // '{' <- The start of the block
         self.advance();
 
@@ -510,7 +510,7 @@ impl Parser {
             },
             name,
             r#type,
-            params: if params.len() == 0 {
+            params: if params.len() != 0 {
                 Some(params)
             } else {
                 None

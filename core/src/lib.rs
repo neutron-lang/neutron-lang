@@ -1,7 +1,9 @@
+use backend::c_code_gen;
 use colored::Colorize;
 use std::fs;
 use std::process;
 
+pub mod backend;
 pub mod error_handler;
 pub mod frontend;
 pub mod midend;
@@ -37,6 +39,11 @@ pub fn analyze_source(file_path: &String, file_name: &String) -> frontend::parse
     // Parse the lexer result and returns a ast
     let mut parser_result = frontend::parser::Parser::new(lexer_result);
     parser_result.parse_tokens();
+
+    let mut c_code = backend::c_code_gen::CCodeGen::new(parser_result.ast.clone());
+    c_code.gen_c_code();
+
+    println!("{}", c_code.code);
 
     return parser_result;
 }

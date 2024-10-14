@@ -12,8 +12,8 @@ pub fn newline_callback(lex: &mut Lexer<TokenType>) {
 
 /// Compute the line and column position for the current word.
 pub fn word_callback(lex: &mut Lexer<TokenType>) {
-    let line = lex.extras.0;
-    let column = lex.span().start - lex.extras.1;
+    let _line = lex.extras.0;
+    let _column = lex.span().start - lex.extras.1;
 }
 
 /// Lexer the input and returns a vector of tokens
@@ -40,7 +40,7 @@ pub fn lex_source(input: &str) -> Vec<Token> {
                 }
 
                 // A new token
-                let mut tk = Token {
+                let tk = Token {
                     token_type: token.clone(),
                     token_value: lex.slice().to_string(),
                     line: token_position.line,

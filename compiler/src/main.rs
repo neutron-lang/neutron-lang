@@ -54,7 +54,8 @@ fn parse_args(args: &Vec<String>, flags: &mut Flags) {
                     }
                     .show_message("compiler".to_string());
 
-                    dbg!(analyze_source(&source_path, arg));
+                    analyze_source(&source_path, arg);
+                    // dbg!(analyze_source(&source_path, arg));
                 }
             }
         }
