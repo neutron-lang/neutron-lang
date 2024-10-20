@@ -1,5 +1,5 @@
 use crate::types::{bult_in_types::*, parse_nodes::*};
-use std::iter::Peekable;
+use std::{env, fs};
 
 #[derive(Clone)]
 pub struct CCodeGen {
@@ -19,9 +19,15 @@ impl CCodeGen {
 
     pub fn gen_c_code(&mut self) {
         match &self.current_node {
-            Statement::Program { start, body } => self.gen_program(),
+            Statement::Program { .. } => self.gen_program(),
             _ => {}
         }
+
+        self.create_c_file();
+    }
+
+    fn create_c_file(&mut self) {
+        fs::write("output.c", self.code.clone()).expect("error");
     }
 
     fn push_code(&mut self, code: &str) {
