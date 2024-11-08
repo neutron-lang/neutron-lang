@@ -1,5 +1,5 @@
 use crate::types::{bult_in_types::*, parse_nodes::*};
-use std::{env, fs};
+use std::fs;
 
 #[derive(Clone)]
 pub struct CCodeGen {

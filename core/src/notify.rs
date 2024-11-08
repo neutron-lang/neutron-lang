@@ -11,20 +11,34 @@ impl Message {
         println!("- [{}]: {}", from.green(), self.text);
     }
 
-    pub fn show_error(&self) {
+    pub fn show_warning(&self) {
         println!(
             "- [{}]: ({}:{}) -> {}",
-            "error".red(),
+            "warning".yellow(),
             self.line + 1,
             self.column + 1,
             self.text
         );
     }
 
-    pub fn show_warning(&self) {
+    pub fn show_error(&self) {
+        println!("- [{}]: {}", "error".red(), self.text);
+    }
+
+    pub fn show_code_warning(&self) {
         println!(
             "- [{}]: ({}:{}) -> {}",
             "warning".yellow(),
+            self.line + 1,
+            self.column + 1,
+            self.text
+        );
+    }
+
+    pub fn show_code_error(&self) {
+        println!(
+            "- [{}]: ({}:{}) -> {}",
+            "error".red(),
             self.line + 1,
             self.column + 1,
             self.text

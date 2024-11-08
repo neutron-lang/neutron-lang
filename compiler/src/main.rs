@@ -1,63 +1,76 @@
-use core::{self, analyze_source, notify};
-use std::env;
+use core::{self, analyze_source, error_handler::*};
+use std::{env, iter::Peekable};
+mod compiler;
 
-struct Flags {
-    werror: bool,
+#[derive(Debug)]
+struct Arguments {
+    args: Peekable<std::vec::IntoIter<String>>,
+    current_arg: String,
+    flags: compiler::Flags,
 }
 
-impl Flags {
-    fn set_flag(&mut self, flag_id: &str) {
-        match flag_id {
-            "-werror" => self.werror = true,
+impl Arguments {
+    fn new(input: Vec<String>) -> Self {
+        let input_iter = input.into_iter().peekable();
 
-            _ => {
-                notify::Message {
-                    text: format!("{} -> non existent flag.", flag_id),
-                    line: 0,
-                    column: 0,
-                }
-                .show_message("neutron".to_string());
-                std::process::exit(1);
+        Self {
+            current_arg: input_iter.clone().next().unwrap(),
+            args: input_iter,
+            flags: compiler::Flags::new(),
+        }
+    }
+
+    fn current(&self) -> &String {
+        &self.current_arg
+    }
+
+    fn advance(&mut self) -> usize {
+        match self.args.peek() {
+            Some(_) => {
+                self.args.next();
+                return 0;
+            }
+            None => {
+                return 1;
             }
         }
     }
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    // Collect the arguments from the cmd, and remove the first argument
+    let mut args: Vec<String> = env::args().collect();
+    args.remove(0);
 
-    let mut compiler_flags = Flags { werror: false };
+    let mut cmd_args = Arguments::new(args);
 
-    parse_args(&args, &mut compiler_flags);
+    // Parse the arguments
+    parse_args(&mut cmd_args);
 }
 
-fn parse_args(args: &Vec<String>, flags: &mut Flags) {
-    // If doesn't receive arguments, so print on the console the help content of the compiler
-    if args.len() < 2 {
+fn parse_args(cmd_args: &mut Arguments) {
+    // Turn the arguments into a peekable iterator
+    let mut index: usize = 0;
+
+    // If doesn't receive arguments, so print the help content of the compiler on the console.
+    if cmd_args.args.len() < 1 {
         core::show_help_content("compiler", env!("CARGO_PKG_DESCRIPTION"));
-    } else {
-        for arg in args {
-            // If the argument isn't the first argument, so can parse it.
-            if &args[0] != arg {
-                // If the argument start with "-", so it is a compiler flag.
-                if arg.chars().nth(0).unwrap() == '-' {
-                    flags.set_flag(arg.as_str())
-                } else {
-                    // Else the argument is a source file, a file with sol code.
-                    let cpath = env::current_dir().unwrap();
-                    let source_path = cpath.into_os_string().into_string().unwrap() + "/" + arg;
+        return;
+    }
 
-                    notify::Message {
-                        text: format!("compiling -> {}", arg),
-                        line: 0,
-                        column: 0,
-                    }
-                    .show_message("compiler".to_string());
-
-                    analyze_source(&source_path, arg);
-                    // dbg!(analyze_source(&source_path, arg));
-                }
-            }
+    // Else while the index is less than the argument count
+    while index < cmd_args.args.len() {
+        // If the argument start with '-', so it's a compiler flag.
+        if cmd_args.current().chars().nth(0).unwrap() == '-' {
+            println!("arg");
+        } else {
+            println!("value");
         }
+
+        if cmd_args.advance() == 0 {
+            println!("ok");
+        }
+
+        index += 1;
     }
 }
